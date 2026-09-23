@@ -1,11 +1,11 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/network/failures.dart';
 import '../../../../core/network/network_info.dart';
-import '../../domain/entities/driver_entities.dart';
-import '../../domain/repositories/driver_repository.dart';
 import '../datasources/driver_remote_data_source.dart';
+import '../models/driver_models.dart';
+import 'driver_repository.dart';
 
 @LazySingleton(as: DriverRepository)
 class DriverRepositoryImpl implements DriverRepository {
@@ -19,16 +19,16 @@ class DriverRepositoryImpl implements DriverRepository {
   final NetworkInfo _network;
 
   @override
-  Future<Either<Failure, DriverStatusEntity>> getDriverStatus() =>
+  Future<Either<Failure, DriverStatusModel>> getDriverStatus() =>
       _guard(() => _remote.getDriverStatus());
 
   @override
-  Future<Either<Failure, DriverStatusEntity>> updateDriverStatus(
-      DriverStatus status) =>
+  Future<Either<Failure, DriverStatusModel>> updateDriverStatus(
+          DriverStatus status) =>
       _guard(() => _remote.updateDriverStatus(status));
 
   @override
-  Future<Either<Failure, ActiveRouteEntity?>> getActiveRoute() =>
+  Future<Either<Failure, ActiveRouteModel?>> getActiveRoute() =>
       _guard(() => _remote.getActiveRoute());
 
   @override
@@ -44,7 +44,7 @@ class DriverRepositoryImpl implements DriverRepository {
           ));
 
   @override
-  Future<Either<Failure, EarningsEntity>> getEarnings(
+  Future<Either<Failure, EarningsModel>> getEarnings(
           {String period = 'today'}) =>
       _guard(() => _remote.getEarnings(period: period));
 

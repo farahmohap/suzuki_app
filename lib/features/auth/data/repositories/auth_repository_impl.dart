@@ -1,20 +1,14 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/network/failures.dart';
 import '../../../../core/network/network_info.dart';
-import '../../domain/entities/auth_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../models/auth_model.dart';
+import 'auth_repository.dart';
 
-/// Concrete [AuthRepository] implementation.
-///
-/// Strategy:
-///   • Checks network availability before every remote call.
-///   • On success: persists token + user to [AuthLocalDataSource].
-///   • Maps all exceptions to [Failure] subtypes via sealed class matching.
+/// Concrete [AuthRepository] implementation using [AuthModel] directly.
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
@@ -30,7 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final NetworkInfo _network;
 
   @override
-  Future<Either<Failure, AuthEntity>> login({
+  Future<Either<Failure, AuthModel>> login({
     required String phone,
     required String password,
   }) async {
@@ -53,7 +47,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthEntity>> register({
+  Future<Either<Failure, AuthModel>> register({
     required String phone,
     required String password,
     required String fullName,
@@ -79,7 +73,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthEntity>> verifyOtp({
+  Future<Either<Failure, AuthModel>> verifyOtp({
     required String phone,
     required String otp,
   }) async {
@@ -135,7 +129,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthEntity?> getCachedUser() => _local.getCachedUser();
+  Future<AuthModel?> getCachedUser() => _local.getCachedUser();
 
   // ── Private helpers ──────────────────────────────────────────────────────
   Future<void> _persistSession(AuthModel model) async {

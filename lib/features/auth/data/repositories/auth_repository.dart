@@ -1,19 +1,17 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/error/failures.dart';
-import '../entities/auth_entity.dart';
+import '../../../../core/network/failures.dart';
+import '../models/auth_model.dart';
 
-/// Contract for auth operations.
-/// Implemented in the data layer — domain only depends on this abstraction.
+/// Contract for auth operations returning [AuthModel] directly.
 abstract class AuthRepository {
   /// Authenticates user with phone + password.
-  /// Returns [AuthEntity] on success, [Failure] on error.
-  Future<Either<Failure, AuthEntity>> login({
+  Future<Either<Failure, AuthModel>> login({
     required String phone,
     required String password,
   });
 
   /// Registers a new user account.
-  Future<Either<Failure, AuthEntity>> register({
+  Future<Either<Failure, AuthModel>> register({
     required String phone,
     required String password,
     required String fullName,
@@ -21,7 +19,7 @@ abstract class AuthRepository {
   });
 
   /// Verifies the OTP sent to [phone].
-  Future<Either<Failure, AuthEntity>> verifyOtp({
+  Future<Either<Failure, AuthModel>> verifyOtp({
     required String phone,
     required String otp,
   });
@@ -35,6 +33,6 @@ abstract class AuthRepository {
   /// Checks whether a valid auth token exists locally.
   Future<bool> isAuthenticated();
 
-  /// Returns the cached [AuthEntity] if available.
-  Future<AuthEntity?> getCachedUser();
+  /// Returns the cached [AuthModel] if available.
+  Future<AuthModel?> getCachedUser();
 }

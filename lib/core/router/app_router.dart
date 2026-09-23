@@ -11,6 +11,8 @@ import '../../features/passenger/presentation/screens/passenger_home_screen.dart
 import '../../features/passenger/presentation/screens/seat_booking_screen.dart';
 import '../../features/passenger/presentation/screens/active_tracking_screen.dart';
 import '../../features/passenger/presentation/screens/passenger_profile_screen.dart';
+import '../../features/driver/presentation/screens/driver_dashboard_screen.dart';
+import '../../features/driver/presentation/screens/driver_earnings_screen.dart';
 
 /// Configured [GoRouter] for سوزوكي app.
 ///
@@ -35,19 +37,19 @@ class AppRouter {
       GoRoute(
         path: AppRoute.splash.path,
         name: AppRoute.splash.name,
-        builder: (_, __) => const _SplashPage(),
+        builder: (_, _) => const _SplashPage(),
       ),
 
       // ── Auth ──────────────────────────────────────────────────────────────
       GoRoute(
         path: AppRoute.login.path,
         name: AppRoute.login.name,
-        builder: (_, __) => const LoginScreen(),
+        builder: (_, _) => const LoginScreen(),
       ),
       GoRoute(
         path: AppRoute.register.path,
         name: AppRoute.register.name,
-        builder: (_, __) => const RegisterScreen(),
+        builder: (_, _) => const RegisterScreen(),
       ),
       GoRoute(
         path: AppRoute.otp.path,
@@ -64,12 +66,12 @@ class AppRouter {
         routes: [
           GoRoute(
             path: AppRoute.passengerShell.path,
-            redirect: (_, __) => '/passenger/home',
+            redirect: (_, _) => '/passenger/home',
           ),
           GoRoute(
             path: '/passenger/home',
             name: AppRoute.passengerHome.name,
-            builder: (_, __) => const PassengerHomeScreen(),
+            builder: (_, _) => const PassengerHomeScreen(),
           ),
           GoRoute(
             path: '/passenger/book/:routeId',
@@ -90,7 +92,7 @@ class AppRouter {
           GoRoute(
             path: '/passenger/profile',
             name: AppRoute.passengerProfile.name,
-            builder: (_, __) => const PassengerProfileScreen(),
+            builder: (_, _) => const PassengerProfileScreen(),
           ),
         ],
       ),
@@ -101,17 +103,17 @@ class AppRouter {
         routes: [
           GoRoute(
             path: AppRoute.driverShell.path,
-            redirect: (_, __) => '/driver/dashboard',
+            redirect: (_, _) => '/driver/dashboard',
           ),
           GoRoute(
             path: '/driver/dashboard',
             name: AppRoute.driverDashboard.name,
-            builder: (_, __) => const DriverDashboardScreen(),
+            builder: (_, _) => const DriverDashboardScreen(),
           ),
           GoRoute(
             path: '/driver/earnings',
             name: AppRoute.driverEarnings.name,
-            builder: (_, __) => const DriverEarningsScreen(),
+            builder: (_, _) => const DriverEarningsScreen(),
           ),
         ],
       ),

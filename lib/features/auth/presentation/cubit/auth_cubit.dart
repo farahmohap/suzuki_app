@@ -1,33 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/usecases/login_usecase.dart';
-import '../../domain/usecases/register_usecase.dart';
-import '../../domain/usecases/verify_otp_usecase.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../data/repositories/auth_repository.dart';
 import 'auth_state.dart';
 
 /// Manages authentication lifecycle: login, register, OTP, and logout.
-///
-/// Emits [AuthState] variants to drive UI transitions.
+/// Interacts directly with [AuthRepository] without use cases.
 @injectable
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({
-    required LoginUseCase loginUseCase,
-    required RegisterUseCase registerUseCase,
-    required VerifyOtpUseCase verifyOtpUseCase,
-    required ResendOtpUseCase resendOtpUseCase,
     required AuthRepository authRepository,
-  })  : _login = loginUseCase,
-        _register = registerUseCase,
-        _verifyOtp = verifyOtpUseCase,
-        _resendOtp = resendOtpUseCase,
-        _authRepo = authRepository,
+  })  : _authRepo = authRepository,
         super(const AuthInitial());
 
-  final LoginUseCase _login;
-  final RegisterUseCase _register;
-  final VerifyOtpUseCase _verifyOtp;
-  final ResendOtpUseCase _resendOtp;
   final AuthRepository _authRepo;
 
   /// Checks stored token and emits [AuthAuthenticated] or [AuthUnauthenticated].
@@ -48,7 +32,7 @@ class AuthCubit extends Cubit<AuthState> {
   /// Attempts login with [phone] + [password].
   Future<void> login({required String phone, required String password}) async {
     emit(const AuthLoading());
-    final result = await _login(phone: phone, password: password);
+    final result = await _authRepo.login(phone: phone, password: password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (user) => emit(AuthAuthenticated(user)),
@@ -63,7 +47,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String role,
   }) async {
     emit(const AuthLoading());
-    final result = await _register(
+    final result = await _authRepo.register(
       phone: phone,
       password: password,
       fullName: fullName,
@@ -81,7 +65,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String otp,
   }) async {
     emit(const AuthLoading());
-    final result = await _verifyOtp(phone: phone, otp: otp);
+    final result = await _authRepo.verifyOtp(phone: phone, otp: otp);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (user) => emit(AuthAuthenticated(user)),
@@ -90,7 +74,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// Resends OTP to [phone].
   Future<void> resendOtp({required String phone}) async {
-    final result = await _resendOtp(phone: phone);
+    final result = await _authRepo.resendOtp(phone: phone);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (_) => emit(AuthOtpResent(phone: phone)),

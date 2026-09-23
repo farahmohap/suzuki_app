@@ -1,22 +1,8 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Extension helpers to apply [flutter_screenutil] responsive sizing
-/// with semantic names throughout the codebase.
-///
-/// Design reference: 390×844 pt (iPhone 14 base).
+/// with semantic padding throughout the codebase.
 extension ScreenUtilX on num {
-  /// Width — scales relative to design width (390)
-  double get w => toDouble().w;
-
-  /// Height — scales relative to design height (844)
-  double get h => toDouble().h;
-
-  /// Font size — scales with screen width
-  double get sp => toDouble().sp;
-
-  /// Radius — scales with the minimum of width/height
-  double get r => toDouble().r;
-
   /// Horizontal symmetrical padding
   double get pw => toDouble().w;
 

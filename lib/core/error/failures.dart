@@ -1,9 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'exceptions.dart';
 
-/// Base [Failure] sealed class for the fpdart Either<Failure, T> pattern.
-/// Every failure carries a human-readable [message] (Arabic) and an
-/// optional technical [code] for logging/debugging.
 sealed class Failure {
   const Failure({required this.message, this.code});
 
@@ -26,11 +23,8 @@ final class ServerFailure extends Failure {
 
   final int? statusCode;
 
-  factory ServerFailure.fromException(ServerException e) => ServerFailure(
-        message: e.message,
-        code: e.code,
-        statusCode: e.statusCode,
-      );
+  factory ServerFailure.fromException(ServerException e) =>
+      ServerFailure(message: e.message, code: e.code, statusCode: e.statusCode);
 }
 
 /// Device has no internet connection or request timed out.
@@ -40,10 +34,8 @@ final class NetworkFailure extends Failure {
     super.code = 'NETWORK_ERROR',
   });
 
-  factory NetworkFailure.fromException(NetworkException e) => NetworkFailure(
-        message: e.message,
-        code: e.code,
-      );
+  factory NetworkFailure.fromException(NetworkException e) =>
+      NetworkFailure(message: e.message, code: e.code);
 }
 
 /// Local database / Hive / SharedPreferences operation failed.
@@ -53,10 +45,8 @@ final class CacheFailure extends Failure {
     super.code = 'CACHE_ERROR',
   });
 
-  factory CacheFailure.fromException(CacheException e) => CacheFailure(
-        message: e.message,
-        code: e.code,
-      );
+  factory CacheFailure.fromException(CacheException e) =>
+      CacheFailure(message: e.message, code: e.code);
 }
 
 /// Authentication/authorization failed (401 / 403).

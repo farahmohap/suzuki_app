@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({super.key});
+class DriverEarningsScreen extends StatelessWidget {
+  const DriverEarningsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: Text('RegisterScreen'),
+        child: Text('DriverEarningsScreen'),
       ),
     );
   }

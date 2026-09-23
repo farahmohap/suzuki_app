@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/auth_entity.dart';
+import '../../data/models/auth_model.dart';
 
 /// Immutable sealed state hierarchy for [AuthCubit].
 sealed class AuthState extends Equatable {
@@ -19,11 +19,11 @@ final class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
-/// Authentication succeeded.
+/// Authentication succeeded with [AuthModel].
 final class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(this.user);
 
-  final AuthEntity user;
+  final AuthModel user;
 
   @override
   List<Object?> get props => [user];

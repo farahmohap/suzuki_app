@@ -1,26 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/entities/landmark_entity.dart';
-import '../../domain/usecases/book_seat_usecase.dart';
-import '../../domain/usecases/get_available_routes_usecase.dart';
-import '../../domain/usecases/landmark_usecases.dart';
-import '../../domain/repositories/passenger_repository.dart';
+import '../../data/models/passenger_models.dart';
+import '../../data/repositories/passenger_repository.dart';
 import 'passenger_states.dart';
 
-/// Manages seat booking and route browsing state.
+/// Manages seat booking and route browsing state directly with [PassengerRepository].
 @injectable
 class BookingCubit extends Cubit<BookingState> {
   BookingCubit({
-    required GetAvailableRoutesUseCase getAvailableRoutes,
-    required BookSeatUseCase bookSeat,
     required PassengerRepository passengerRepository,
-  })  : _getRoutes = getAvailableRoutes,
-        _bookSeat = bookSeat,
-        _repo = passengerRepository,
+  })  : _repo = passengerRepository,
         super(const BookingInitial());
 
-  final GetAvailableRoutesUseCase _getRoutes;
-  final BookSeatUseCase _bookSeat;
   final PassengerRepository _repo;
 
   Future<void> loadRoutes({
@@ -29,7 +20,7 @@ class BookingCubit extends Cubit<BookingState> {
     double radiusKm = 5.0,
   }) async {
     emit(const BookingLoading());
-    final result = await _getRoutes(
+    final result = await _repo.getAvailableRoutes(
       latitude: latitude,
       longitude: longitude,
       radiusKm: radiusKm,
@@ -45,7 +36,7 @@ class BookingCubit extends Cubit<BookingState> {
     required int seatNumber,
   }) async {
     emit(const BookingLoading());
-    final result = await _bookSeat(routeId: routeId, seatNumber: seatNumber);
+    final result = await _repo.bookSeat(routeId: routeId, seatNumber: seatNumber);
     result.fold(
       (f) => emit(BookingError(f.message)),
       (booking) => emit(SeatBooked(booking)),
@@ -71,33 +62,27 @@ class BookingCubit extends Cubit<BookingState> {
   }
 }
 
-/// Manages saved landmark CRUD state.
+/// Manages saved landmark CRUD state directly with [PassengerRepository].
 @injectable
 class LandmarkCubit extends Cubit<LandmarkState> {
   LandmarkCubit({
-    required GetSavedLandmarksUseCase getSavedLandmarks,
-    required SaveLandmarkUseCase saveLandmark,
-    required DeleteLandmarkUseCase deleteLandmark,
-  })  : _get = getSavedLandmarks,
-        _save = saveLandmark,
-        _delete = deleteLandmark,
+    required PassengerRepository passengerRepository,
+  })  : _repo = passengerRepository,
         super(const LandmarkInitial());
 
-  final GetSavedLandmarksUseCase _get;
-  final SaveLandmarkUseCase _save;
-  final DeleteLandmarkUseCase _delete;
+  final PassengerRepository _repo;
 
   Future<void> loadLandmarks() async {
     emit(const LandmarkLoading());
-    final result = await _get();
+    final result = await _repo.getSavedLandmarks();
     result.fold(
       (f) => emit(LandmarkError(f.message)),
       (landmarks) => emit(LandmarksLoaded(landmarks)),
     );
   }
 
-  Future<void> saveLandmark(LandmarkEntity landmark) async {
-    final result = await _save(landmark);
+  Future<void> saveLandmark(LandmarkModel landmark) async {
+    final result = await _repo.saveLandmark(landmark);
     result.fold(
       (f) => emit(LandmarkError(f.message)),
       (saved) => emit(LandmarkSaved(saved)),
@@ -105,7 +90,7 @@ class LandmarkCubit extends Cubit<LandmarkState> {
   }
 
   Future<void> deleteLandmark(String landmarkId) async {
-    final result = await _delete(landmarkId: landmarkId);
+    final result = await _repo.deleteLandmark(landmarkId: landmarkId);
     result.fold(
       (f) => emit(LandmarkError(f.message)),
       (_) => emit(LandmarkDeleted(landmarkId)),

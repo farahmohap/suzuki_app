@@ -31,10 +31,6 @@ abstract class RegisterModule {
   Dio get dio => _buildDio();
 
   Dio _buildDio() {
-    // The full configuration lives in DioClient — here we just expose
-    // the same singleton instance through get_it.
-    // Import avoidance: we inline the base options here and let
-    // DioClient.instance handle interceptors.
     return Dio(
       BaseOptions(
         baseUrl: 'https://api.suzuki-app.sa/v1',
@@ -49,3 +45,5 @@ abstract class RegisterModule {
     );
   }
 }
+
+class RegisterModuleImpl extends RegisterModule {}

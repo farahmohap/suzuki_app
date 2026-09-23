@@ -1,42 +1,148 @@
+import 'package:equatable/equatable.dart';
 import 'package:latlong2/latlong.dart';
-import '../../domain/entities/seat_booking_entity.dart';
-import '../../domain/entities/landmark_entity.dart';
-import '../../domain/entities/route_entity.dart';
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+/// Lifecycle status for a seat reservation.
+enum BookingStatus {
+  pending,
+  confirmed,
+  inProgress,
+  completed,
+  cancelled;
+
+  String get label {
+    switch (this) {
+      case pending:
+        return 'قيد الانتظار';
+      case confirmed:
+        return 'مؤكد';
+      case inProgress:
+        return 'في الطريق';
+      case completed:
+        return 'مكتمل';
+      case cancelled:
+        return 'ملغي';
+    }
+  }
+
+  static BookingStatus fromString(String? s) {
+    switch (s) {
+      case 'confirmed':
+        return BookingStatus.confirmed;
+      case 'in_progress':
+        return BookingStatus.inProgress;
+      case 'completed':
+        return BookingStatus.completed;
+      case 'cancelled':
+        return BookingStatus.cancelled;
+      default:
+        return BookingStatus.pending;
+    }
+  }
+}
+
+/// Category of a passenger's saved location.
+enum LandmarkType {
+  home,
+  work,
+  custom;
+
+  String get label {
+    switch (this) {
+      case home:
+        return 'المنزل';
+      case work:
+        return 'العمل';
+      case custom:
+        return 'مخصص';
+    }
+  }
+
+  String get iconEmoji {
+    switch (this) {
+      case home:
+        return '🏠';
+      case work:
+        return '💼';
+      case custom:
+        return '📍';
+    }
+  }
+
+  static LandmarkType fromString(String? s) {
+    switch (s) {
+      case 'home':
+        return LandmarkType.home;
+      case 'work':
+        return LandmarkType.work;
+      default:
+        return LandmarkType.custom;
+    }
+  }
+}
 
 // ── RouteModel ───────────────────────────────────────────────────────────────
 
-class RouteModel extends RouteEntity {
+class RouteModel extends Equatable {
   const RouteModel({
-    required super.routeId,
-    required super.name,
-    required super.origin,
-    required super.destination,
-    required super.originName,
-    required super.destinationName,
-    required super.availableSeats,
-    required super.totalSeats,
-    required super.fare,
-    required super.estimatedDuration,
-    required super.departureTime,
-    super.waypoints,
-    super.driverName,
-    super.vehiclePlate,
-    super.distanceKm,
+    required this.routeId,
+    required this.name,
+    required this.origin,
+    required this.destination,
+    required this.originName,
+    required this.destinationName,
+    required this.availableSeats,
+    required this.totalSeats,
+    required this.fare,
+    required this.estimatedDuration,
+    required this.departureTime,
+    this.waypoints = const [],
+    this.driverName,
+    this.vehiclePlate,
+    this.distanceKm,
   });
 
+  final String routeId;
+  final String name;
+  final LatLng origin;
+  final LatLng destination;
+  final String originName;
+  final String destinationName;
+  final int availableSeats;
+  final int totalSeats;
+  final double fare;
+  final Duration estimatedDuration;
+  final DateTime departureTime;
+  final List<LatLng> waypoints;
+  final String? driverName;
+  final String? vehiclePlate;
+  final double? distanceKm;
+
+  bool get hasAvailableSeats => availableSeats > 0;
+  double get occupancyPercent =>
+      totalSeats > 0 ? (totalSeats - availableSeats) / totalSeats : 0.0;
+
   factory RouteModel.fromJson(Map<String, dynamic> json) {
-    final orig = json['origin'] as Map<String, dynamic>;
-    final dest = json['destination'] as Map<String, dynamic>;
+    final orig = json['origin'] as Map<String, dynamic>? ?? {};
+    final dest = json['destination'] as Map<String, dynamic>? ?? {};
+    final waypointList = (json['waypoints'] as List<dynamic>? ?? [])
+        .map((w) => LatLng(
+              ((w as Map)['lat'] as num).toDouble(),
+              (w['lng'] as num).toDouble(),
+            ))
+        .toList();
+
     return RouteModel(
       routeId: json['route_id'] as String? ?? json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       origin: LatLng(
-        (orig['lat'] as num).toDouble(),
-        (orig['lng'] as num).toDouble(),
+        (orig['lat'] as num?)?.toDouble() ?? 0.0,
+        (orig['lng'] as num?)?.toDouble() ?? 0.0,
       ),
       destination: LatLng(
-        (dest['lat'] as num).toDouble(),
-        (dest['lng'] as num).toDouble(),
+        (dest['lat'] as num?)?.toDouble() ?? 0.0,
+        (dest['lng'] as num?)?.toDouble() ?? 0.0,
       ),
       originName: json['origin_name'] as String? ?? '',
       destinationName: json['destination_name'] as String? ?? '',
@@ -48,6 +154,7 @@ class RouteModel extends RouteEntity {
       departureTime: json['departure_time'] != null
           ? DateTime.parse(json['departure_time'] as String)
           : DateTime.now(),
+      waypoints: waypointList,
       driverName: json['driver_name'] as String?,
       vehiclePlate: json['vehicle_plate'] as String?,
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
@@ -69,28 +176,97 @@ class RouteModel extends RouteEntity {
         'fare': fare,
         'duration_minutes': estimatedDuration.inMinutes,
         'departure_time': departureTime.toIso8601String(),
+        'waypoints': waypoints
+            .map((w) => {'lat': w.latitude, 'lng': w.longitude})
+            .toList(),
         'driver_name': driverName,
         'vehicle_plate': vehiclePlate,
         'distance_km': distanceKm,
       };
+
+  RouteModel copyWith({
+    String? routeId,
+    String? name,
+    LatLng? origin,
+    LatLng? destination,
+    String? originName,
+    String? destinationName,
+    int? availableSeats,
+    int? totalSeats,
+    double? fare,
+    Duration? estimatedDuration,
+    DateTime? departureTime,
+    List<LatLng>? waypoints,
+    String? driverName,
+    String? vehiclePlate,
+    double? distanceKm,
+  }) {
+    return RouteModel(
+      routeId: routeId ?? this.routeId,
+      name: name ?? this.name,
+      origin: origin ?? this.origin,
+      destination: destination ?? this.destination,
+      originName: originName ?? this.originName,
+      destinationName: destinationName ?? this.destinationName,
+      availableSeats: availableSeats ?? this.availableSeats,
+      totalSeats: totalSeats ?? this.totalSeats,
+      fare: fare ?? this.fare,
+      estimatedDuration: estimatedDuration ?? this.estimatedDuration,
+      departureTime: departureTime ?? this.departureTime,
+      waypoints: waypoints ?? this.waypoints,
+      driverName: driverName ?? this.driverName,
+      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      distanceKm: distanceKm ?? this.distanceKm,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        routeId,
+        name,
+        origin,
+        destination,
+        originName,
+        destinationName,
+        availableSeats,
+        totalSeats,
+        fare,
+        estimatedDuration,
+        departureTime,
+      ];
 }
 
 // ── SeatBookingModel ─────────────────────────────────────────────────────────
 
-class SeatBookingModel extends SeatBookingEntity {
+class SeatBookingModel extends Equatable {
   const SeatBookingModel({
-    required super.bookingId,
-    required super.routeId,
-    required super.passengerId,
-    required super.seatNumber,
-    required super.status,
-    required super.bookedAt,
-    super.fare,
-    super.estimatedArrival,
-    super.driverName,
-    super.vehiclePlate,
-    super.currentDriverLocation,
+    required this.bookingId,
+    required this.routeId,
+    required this.passengerId,
+    required this.seatNumber,
+    required this.status,
+    required this.bookedAt,
+    this.fare,
+    this.estimatedArrival,
+    this.driverName,
+    this.vehiclePlate,
+    this.currentDriverLocation,
   });
+
+  final String bookingId;
+  final String routeId;
+  final String passengerId;
+  final int seatNumber;
+  final BookingStatus status;
+  final DateTime bookedAt;
+  final double? fare;
+  final DateTime? estimatedArrival;
+  final String? driverName;
+  final String? vehiclePlate;
+  final LatLng? currentDriverLocation;
+
+  bool get isActive =>
+      status == BookingStatus.confirmed || status == BookingStatus.inProgress;
 
   factory SeatBookingModel.fromJson(Map<String, dynamic> json) {
     LatLng? driverLoc;
@@ -106,7 +282,7 @@ class SeatBookingModel extends SeatBookingEntity {
       routeId: json['route_id'] as String? ?? '',
       passengerId: json['passenger_id'] as String? ?? '',
       seatNumber: json['seat_number'] as int? ?? 0,
-      status: _parseStatus(json['status'] as String?),
+      status: BookingStatus.fromString(json['status'] as String?),
       bookedAt: json['booked_at'] != null
           ? DateTime.parse(json['booked_at'] as String)
           : DateTime.now(),
@@ -120,44 +296,63 @@ class SeatBookingModel extends SeatBookingEntity {
     );
   }
 
-  static BookingStatus _parseStatus(String? s) {
-    switch (s) {
-      case 'confirmed':
-        return BookingStatus.confirmed;
-      case 'in_progress':
-        return BookingStatus.inProgress;
-      case 'completed':
-        return BookingStatus.completed;
-      case 'cancelled':
-        return BookingStatus.cancelled;
-      default:
-        return BookingStatus.pending;
-    }
-  }
+  Map<String, dynamic> toJson() => {
+        'booking_id': bookingId,
+        'route_id': routeId,
+        'passenger_id': passengerId,
+        'seat_number': seatNumber,
+        'status': status.name,
+        'booked_at': bookedAt.toIso8601String(),
+        'fare': fare,
+        'estimated_arrival': estimatedArrival?.toIso8601String(),
+        'driver_name': driverName,
+        'vehicle_plate': vehiclePlate,
+        if (currentDriverLocation != null)
+          'driver_location': {
+            'lat': currentDriverLocation!.latitude,
+            'lng': currentDriverLocation!.longitude,
+          },
+      };
+
+  @override
+  List<Object?> get props => [
+        bookingId,
+        routeId,
+        passengerId,
+        seatNumber,
+        status,
+        bookedAt,
+      ];
 }
 
 // ── LandmarkModel ─────────────────────────────────────────────────────────────
 
-class LandmarkModel extends LandmarkEntity {
+class LandmarkModel extends Equatable {
   const LandmarkModel({
-    required super.id,
-    required super.name,
-    required super.location,
-    super.address,
-    super.type,
+    required this.id,
+    required this.name,
+    required this.location,
+    this.address,
+    this.type = LandmarkType.custom,
   });
 
+  final String id;
+  final String name;
+  final LatLng location;
+  final String? address;
+  final LandmarkType type;
+
   factory LandmarkModel.fromJson(Map<String, dynamic> json) {
-    final loc = json['location'] as Map<String, dynamic>;
+    final loc = json['location'] as Map<String, dynamic>? ?? {};
     return LandmarkModel(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       location: LatLng(
-        (loc['lat'] as num).toDouble(),
-        (loc['lng'] as num).toDouble(),
+        (loc['lat'] as num?)?.toDouble() ?? 0.0,
+        (loc['lng'] as num?)?.toDouble() ?? 0.0,
       ),
       address: json['address'] as String?,
-      type: _parseType(json['type'] as String?),
+      type: LandmarkType.fromString(json['type'] as String?),
     );
   }
 
@@ -172,22 +367,6 @@ class LandmarkModel extends LandmarkEntity {
         'type': type.name,
       };
 
-  factory LandmarkModel.fromEntity(LandmarkEntity entity) => LandmarkModel(
-        id: entity.id,
-        name: entity.name,
-        location: entity.location,
-        address: entity.address,
-        type: entity.type,
-      );
-
-  static LandmarkType _parseType(String? s) {
-    switch (s) {
-      case 'home':
-        return LandmarkType.home;
-      case 'work':
-        return LandmarkType.work;
-      default:
-        return LandmarkType.custom;
-    }
-  }
+  @override
+  List<Object?> get props => [id, name, location, address, type];
 }

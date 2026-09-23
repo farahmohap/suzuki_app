@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:injectable/injectable.dart';
+
 /// Abstract contract for checking device network connectivity.
 abstract class NetworkInfo {
   Future<bool> get isConnected;
@@ -7,6 +9,7 @@ abstract class NetworkInfo {
 
 /// Production implementation using a raw socket connection check.
 /// Avoids adding `internet_connection_checker` as an extra dependency.
+@LazySingleton(as: NetworkInfo)
 class NetworkInfoImpl implements NetworkInfo {
   const NetworkInfoImpl();
 

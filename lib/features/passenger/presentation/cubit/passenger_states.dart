@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/landmark_entity.dart';
-import '../../domain/entities/route_entity.dart';
-import '../../domain/entities/seat_booking_entity.dart';
+import '../../data/models/passenger_models.dart';
 
 // ── Booking State ────────────────────────────────────────────────────────────
 
@@ -21,21 +19,21 @@ final class BookingLoading extends BookingState {
 
 final class RoutesLoaded extends BookingState {
   const RoutesLoaded(this.routes);
-  final List<RouteEntity> routes;
+  final List<RouteModel> routes;
   @override
   List<Object?> get props => [routes];
 }
 
 final class SeatBooked extends BookingState {
   const SeatBooked(this.booking);
-  final SeatBookingEntity booking;
+  final SeatBookingModel booking;
   @override
   List<Object?> get props => [booking];
 }
 
 final class ActiveBookingLoaded extends BookingState {
   const ActiveBookingLoaded(this.booking);
-  final SeatBookingEntity? booking;
+  final SeatBookingModel? booking;
   @override
   List<Object?> get props => [booking];
 }
@@ -69,14 +67,14 @@ final class LandmarkLoading extends LandmarkState {
 
 final class LandmarksLoaded extends LandmarkState {
   const LandmarksLoaded(this.landmarks);
-  final List<LandmarkEntity> landmarks;
+  final List<LandmarkModel> landmarks;
   @override
   List<Object?> get props => [landmarks];
 }
 
 final class LandmarkSaved extends LandmarkState {
   const LandmarkSaved(this.landmark);
-  final LandmarkEntity landmark;
+  final LandmarkModel landmark;
   @override
   List<Object?> get props => [landmark];
 }

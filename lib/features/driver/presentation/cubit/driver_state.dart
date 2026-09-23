@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/driver_entities.dart';
+import '../../data/models/driver_models.dart';
 
 sealed class DriverState extends Equatable {
   const DriverState();
@@ -17,14 +17,14 @@ final class DriverLoading extends DriverState {
 
 final class DriverStatusUpdated extends DriverState {
   const DriverStatusUpdated(this.status);
-  final DriverStatusEntity status;
+  final DriverStatusModel status;
   @override
   List<Object?> get props => [status];
 }
 
 final class ActiveRouteLoaded extends DriverState {
   const ActiveRouteLoaded(this.route);
-  final ActiveRouteEntity? route;
+  final ActiveRouteModel? route;
   @override
   List<Object?> get props => [route];
 }
@@ -39,7 +39,7 @@ final class SeatUpdated extends DriverState {
 
 final class EarningsLoaded extends DriverState {
   const EarningsLoaded(this.earnings);
-  final EarningsEntity earnings;
+  final EarningsModel earnings;
   @override
   List<Object?> get props => [earnings];
 }

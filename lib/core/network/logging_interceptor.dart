@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 /// Dev-only pretty-printer interceptor for Dio requests & responses.
 /// Automatically stripped in release builds via [kDebugMode] check in [DioClient].
 class LoggingInterceptor extends Interceptor {
-  static const _separator = '─' * 60;
+  static const _separator = '────────────────────────────────────────────────────────────────';
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {

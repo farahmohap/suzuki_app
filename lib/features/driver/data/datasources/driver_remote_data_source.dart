@@ -1,10 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import '../../../../core/error/exceptions.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/driver_models.dart';
-import '../../domain/entities/driver_entities.dart';
 
 abstract class DriverRemoteDataSource {
   Future<DriverStatusModel> getDriverStatus();
