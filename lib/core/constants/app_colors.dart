@@ -50,4 +50,18 @@ abstract final class AppColors {
   // ── Map UI ────────────────────────────────────────────────────────────────
   static const Color mapAccent = Color(0xFF1565C0);
   static const Color markerSuzuki = Color(0xFFFFC107);
+
+  // ── Stitch Design Tokens ──────────────────────────────────────────────────
+  static const Color stitchCobalt = Color(0xFF1E40AF);
+  static const Color stitchCobaltLight = Color(0xFFEFF6FF);
+  static const Color stitchAmber = Color(0xFFF59E0B);
+  static const Color stitchAmberLight = Color(0xFFFEF3C7);
+  static const Color stitchTeal = Color(0xFF0D9488);
+  static const Color stitchTealLight = Color(0xFFCCFBF1);
+
+  // ── Egyptian Vehicle Plate Colors ──────────────────────────────────────────
+  static const Color plateHeaderBlue = Color(0xFF0284C7);
+  static const Color plateHeaderBg = Color(0xFFE0F2FE);
+  static const Color plateBorder = Color(0xFF94A3B8);
+  static const Color plateBackground = Color(0xFFF8FAFC);
 }

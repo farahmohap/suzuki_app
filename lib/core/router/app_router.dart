@@ -134,7 +134,7 @@ class AppRouter {
         state.matchedLocation == AppRoute.register.path ||
         state.matchedLocation == AppRoute.otp.path;
 
-    if (!isAuth && !onAuthPage) return AppRoute.login.path;
+    if (!isAuth && !onAuthPage) return AppRoute.driverDashboard.path;
     if (isAuth && state.matchedLocation == AppRoute.splash.path) {
       return role == 'driver' ? '/driver/dashboard' : '/passenger/home';
     }
