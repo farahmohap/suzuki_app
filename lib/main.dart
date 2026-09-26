@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:suzuki_app/features/driver/presentation/screens/driver_dashboard_screen.dart';
 import 'core/constants/app_strings.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
@@ -21,17 +22,12 @@ class SuzukiApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp.router(
+        return MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
-          routerConfig: AppRouter.router,
-          builder: (context, widget) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: widget ?? const SizedBox.shrink(),
-            );
-          },
+          //routerConfig: AppRouter.router,
+         home: DriverDashboardScreen(),
         );
       },
     );
