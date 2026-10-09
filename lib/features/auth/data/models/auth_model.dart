@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// User role within the سوزوكي platform.
 enum UserRole {
@@ -47,14 +48,14 @@ class AuthModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'user_id': userId,
-        'access_token': token,
-        'refresh_token': refreshToken,
-        'role': role.name,
-        'phone': phone,
-        'full_name': fullName,
-        'avatar_url': avatarUrl,
-      };
+    'user_id': userId,
+    'access_token': token,
+    'refresh_token': refreshToken,
+    'role': role.name,
+    'phone': phone,
+    'full_name': fullName,
+    'avatar_url': avatarUrl,
+  };
 
   factory AuthModel.fromCacheJson(Map<String, dynamic> json) =>
       AuthModel.fromJson(json);
@@ -81,16 +82,15 @@ class AuthModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        userId,
-        token,
-        refreshToken,
-        role,
-        phone,
-        fullName,
-        avatarUrl,
-      ];
+    userId,
+    token,
+    refreshToken,
+    role,
+    phone,
+    fullName,
+    avatarUrl,
+  ];
 }
-
 
 enum Gender { male, female }
 
@@ -99,7 +99,8 @@ class DriverRegistrationModel {
   String phoneNumber;
   int age;
   Gender gender;
-  
+  XFile? driverPhoto;
+
   // المستندات
   String? nationalIdFrontPath;
   String? nationalIdBackPath;
@@ -125,7 +126,18 @@ class DriverRegistrationModel {
     this.gender = Gender.male,
     this.plateNumbers = '',
     this.plateLetters = '',
-    this.selectedElObourDistricts = const [],
+    List<String>? selectedElObourDistricts,
     this.cashWalletNumber = '',
-  });
+    this.driverPhoto,
+    this.nationalIdFrontPath,
+    this.nationalIdBackPath,
+    this.drivingLicensePath,
+    this.vehicleLicensePath,
+    this.criminalRecordPath,
+    this.vehicleFrontPhoto,
+    this.vehicleBackPhoto,
+    this.vehicleInteriorPhoto,
+  }) : selectedElObourDistricts = selectedElObourDistricts != null
+           ? List<String>.from(selectedElObourDistricts)
+           : [];
 }
