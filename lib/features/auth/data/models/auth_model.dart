@@ -126,7 +126,7 @@ class DriverRegistrationModel {
     this.gender = Gender.male,
     this.plateNumbers = '',
     this.plateLetters = '',
-    this.selectedElObourDistricts = const [],
+    List<String>? selectedElObourDistricts,
     this.cashWalletNumber = '',
     this.driverPhoto,
     this.nationalIdFrontPath,
@@ -134,6 +134,10 @@ class DriverRegistrationModel {
     this.drivingLicensePath,
     this.vehicleLicensePath,
     this.criminalRecordPath,
-    this.vehicleFrontPhoto,   
-  });
+    this.vehicleFrontPhoto,
+    this.vehicleBackPhoto,
+    this.vehicleInteriorPhoto,
+  }) : selectedElObourDistricts = selectedElObourDistricts != null
+           ? List<String>.from(selectedElObourDistricts)
+           : [];
 }

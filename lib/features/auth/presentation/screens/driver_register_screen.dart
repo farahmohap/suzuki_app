@@ -74,8 +74,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const DriverHeaderBanner(),
@@ -113,7 +112,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
                       title: 'بيانات اللوحة والسيارة',
                       subtitle: 'رقم اللوحة المعدنية وحالة الفحص',
                       icon: Icons.directions_car_outlined,
-                      child: VehiclePlateCard(),
+                      child: InteractiveVehiclePlateCard(),
                     ),
                     SizedBox(height: 16.h),
                     SectionCard(
