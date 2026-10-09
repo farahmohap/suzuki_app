@@ -25,7 +25,7 @@ class DriverEarningsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Primary Earnings Card
+            // ── Primary Earnings Card ──────────────────────────────────────
             Container(
               padding: EdgeInsets.all(20.r),
               decoration: BoxDecoration(
@@ -136,7 +136,7 @@ class DriverEarningsScreen extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
 
-            // Performance Metrics
+            // ── Performance Metrics ────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -160,7 +160,7 @@ class DriverEarningsScreen extends StatelessWidget {
             ),
             SizedBox(height: 18.h),
 
-            // Trips Ledger
+            // ── Trips Ledger ───────────────────────────────────────────────
             Text(
               'تفاصيل رحلات اليوم',
               style: TextStyle(

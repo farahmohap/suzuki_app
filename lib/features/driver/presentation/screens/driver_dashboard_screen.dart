@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/egyptian_license_plate.dart';
-import '../../../../core/widgets/suzuki_cabin_grid.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -15,55 +14,8 @@ class DriverDashboardScreen extends StatefulWidget {
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   bool _isOnline = true;
-  int _availableSeatsCount = 4;
-  final int _farePerSeat = 7;
-
-  // 7-passenger van seat map
-  final Map<int, SeatStatus> _driverSeatMap = {
-    1: SeatStatus.occupied,
-    2: SeatStatus.available,
-    3: SeatStatus.occupied,
-    4: SeatStatus.available,
-    5: SeatStatus.available,
-    6: SeatStatus.occupied,
-    7: SeatStatus.available,
-  };
-
-  int get _occupiedSeatsCount =>
-      _driverSeatMap.values.where((s) => s == SeatStatus.occupied).length;
-
-  int get _collectedFare => _occupiedSeatsCount * _farePerSeat;
-
-  void _toggleSeat(int seatNumber) {
-    setState(() {
-      final current = _driverSeatMap[seatNumber];
-      if (current == SeatStatus.occupied) {
-        _driverSeatMap[seatNumber] = SeatStatus.available;
-      } else {
-        _driverSeatMap[seatNumber] = SeatStatus.occupied;
-      }
-      _availableSeatsCount =
-          _driverSeatMap.values.where((s) => s == SeatStatus.available).length;
-    });
-  }
-
-  void _quickAdjustAvailable(int delta) {
-    setState(() {
-      final newCount = (_availableSeatsCount + delta).clamp(0, 7);
-      _availableSeatsCount = newCount;
-
-      // Sync with seat map
-      int toMarkOccupied = 7 - _availableSeatsCount;
-      for (int i = 1; i <= 7; i++) {
-        if (toMarkOccupied > 0) {
-          _driverSeatMap[i] = SeatStatus.occupied;
-          toMarkOccupied--;
-        } else {
-          _driverSeatMap[i] = SeatStatus.available;
-        }
-      }
-    });
-  }
+  String _selectedRoute = 'خط الحصري - ميدان جهينة';
+  int _occupiedSeats = 4; // 4 out of 7 seats filled
 
   @override
   Widget build(BuildContext context) {
@@ -76,373 +28,230 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
         elevation: 0.5,
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            onPressed: () => context.pushNamed(AppRoute.driverEarnings.name),
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {
+              // Navigate to Driver Profile / Switch back to passenger
+              context.goNamed(AppRoute.passengerHome.name);
+            },
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        padding: EdgeInsets.all(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Online / Offline Status Banner ───────────────────────────────
+            // Driver Status & Online Toggle
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
-                color: _isOnline ? AppColors.stitchTealLight : AppColors.grey200,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
                   color: _isOnline ? AppColors.stitchTeal : AppColors.grey400,
-                  width: 1.2,
+                  width: 1.5,
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.h,
-                        decoration: BoxDecoration(
-                          color: _isOnline ? AppColors.stitchTeal : AppColors.grey600,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _isOnline ? 'أنت الآن متصل • جاهز للتحميل' : 'أنت الآن غير متصل',
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.bold,
-                              color: _isOnline ? AppColors.stitchTeal : AppColors.grey800,
-                            ),
-                          ),
-                          Text(
-                            'خط سير: موقف الحصري ➔ ميدان جهينة',
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 10.sp,
-                              color: AppColors.grey600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  CircleAvatar(
+                    radius: 24.r,
+                    backgroundColor: _isOnline ? AppColors.stitchTealLight : AppColors.grey200,
+                    child: Icon(
+                      _isOnline ? Icons.directions_bus : Icons.bus_alert,
+                      color: _isOnline ? AppColors.stitchTeal : AppColors.grey600,
+                    ),
                   ),
-                  Switch.adaptive(
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isOnline ? 'حالة السائق: جاهز للتحميل' : 'حالة السائق: أوفلاين',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        Text(
+                          _isOnline ? 'متواجد في دور موقف الحصري' : 'قم بالتفعيل لبدء رحلات اليوم',
+                          style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.sp,
+                            color: AppColors.grey600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
                     value: _isOnline,
                     activeColor: AppColors.stitchTeal,
-                    onChanged: (val) {
-                      setState(() => _isOnline = val);
-                    },
+                    onChanged: (val) => setState(() => _isOnline = val),
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: 14.h),
-
-            // ── License Plate & Driver Identity ──────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const EgyptianLicensePlate(
-                  numbers: '٥ ٤ ٨ ٢',
-                  letters: 'ق ن ص',
-                ),
-                Text(
-                  'الأسطى محمد الشناوي',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 14.h),
-
-            // ── Live Trip Summary ────────────────────────────────────────────
-            Container(
-              padding: EdgeInsets.all(14.r),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'عدد الركاب الحاليين',
-                          style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 11.sp,
-                            color: AppColors.grey600,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              '$_occupiedSeatsCount',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.stitchCobalt,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              '/ ٧ كراسي',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 13.sp,
-                                color: AppColors.grey600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(width: 1, height: 40.h, color: AppColors.grey200),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'الأجرة المحصلة نقداً',
-                          style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 11.sp,
-                            color: AppColors.grey600,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              '$_collectedFare',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.stitchAmber,
-                              ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              'ج.م',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.onAmber,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 14.h),
-
-            // ── Fast Road Stepper (+ / -) ─────────────────────────────────────
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: AppColors.grey200),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'تعديل سريع للمقاعد الشاغرة',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.onSurface,
-                        ),
-                      ),
-                      Text(
-                        'تحديث فوري لركاب المحطة أثناء الطريق',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 10.sp,
-                          color: AppColors.grey600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => _quickAdjustAvailable(-1),
-                        icon: const Icon(Icons.remove),
-                        style: IconButton.styleFrom(
-                          backgroundColor: AppColors.grey200,
-                          foregroundColor: AppColors.onSurface,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        '$_availableSeatsCount',
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.stitchCobalt,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      IconButton(
-                        onPressed: () => _quickAdjustAvailable(1),
-                        icon: const Icon(Icons.add),
-                        style: IconButton.styleFrom(
-                          backgroundColor: AppColors.stitchCobalt,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 14.h),
-
-            // ── Interactive Cabin Grid for Driver ────────────────────────────
-            Text(
-              'انقر على المقعد لتحديده كـ شاغر أو مشغول:',
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.grey800,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            SuzukiCabinGrid(
-              seatStatuses: _driverSeatMap,
-              isDriverView: true,
-              onSeatTapped: _toggleSeat,
             ),
             SizedBox(height: 16.h),
 
-            // ── Incoming Passenger Booking Request Alert ─────────────────────
+            // Vehicle Plate & Line Selector
             Container(
-              padding: EdgeInsets.all(14.r),
+              padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
-                color: AppColors.stitchAmberLight.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: AppColors.stitchAmber, width: 1.2),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.person_pin, color: AppColors.stitchAmber, size: 20.sp),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'طلب حجز جديد في انتظارك!',
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.onAmber,
-                            ),
+                      Text(
+                        'بيانات العربية والخط',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      const EgyptianLicensePlate(),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.grey100,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedRoute,
+                        isExpanded: true,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12.sp,
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'خط الحصري - ميدان جهينة',
+                            child: Text('خط الحصري - ميدان جهينة (٧ ج.م)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'خط أول المدينة - محور الكفراوي',
+                            child: Text('خط أول المدينة - محور الكفراوي (٦ ج.م)'),
                           ),
                         ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _selectedRoute = val);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
+
+            // Cabin Seat Capacity Status
+            Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'إشغال الكراسي الحالي',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
-                        'منذ دقيقة',
-                        style: TextStyle(fontFamily: 'Cairo', fontSize: 10.sp, color: AppColors.grey600),
+                        '$_occupiedSeats / ٧ كراسي',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.stitchCobalt,
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    'الراكب: أحمد فتحي • مقعدان (١٤ ج.م كاش)',
-                    style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: AppColors.onSurface),
+                  SizedBox(height: 12.h),
+                  LinearProgressIndicator(
+                    value: _occupiedSeats / 7,
+                    backgroundColor: AppColors.grey200,
+                    color: AppColors.stitchCobalt,
+                    minHeight: 10.h,
+                    borderRadius: BorderRadius.circular(5.r),
                   ),
-                  Text(
-                    'نقطة الركوب: موقف الحصري (أمام بنك مصر)',
-                    style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: AppColors.grey600),
-                  ),
-                  SizedBox(height: 10.h),
+                  SizedBox(height: 14.h),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('تم قبول طلب الحجز وتأكيد المقاعد'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.stitchCobalt,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                          ),
-                          child: const Text('قبول الطلب'),
-                        ),
+                      OutlinedButton(
+                        onPressed: _occupiedSeats > 0
+                            ? () => setState(() => _occupiedSeats--)
+                            : null,
+                        child: const Text('نزول راكب (-)'),
                       ),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.error,
-                            side: const BorderSide(color: AppColors.error),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                          ),
-                          child: const Text('اعتذار'),
+                      ElevatedButton(
+                        onPressed: _occupiedSeats < 7
+                            ? () => setState(() => _occupiedSeats++)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.stitchCobalt,
+                          foregroundColor: Colors.white,
                         ),
+                        child: const Text('ركوب راكب (+)'),
                       ),
                     ],
                   ),
                 ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+
+            // Start Trip Button
+            ElevatedButton.icon(
+              onPressed: _isOnline
+                  ? () {
+                      context.pushNamed(
+                        AppRoute.driverTrip.name,
+                        pathParameters: {'tripId': 'trip_active_909'},
+                      );
+                    }
+                  : null,
+              icon: const Icon(Icons.play_arrow),
+              label: Text(
+                'بدء التحرك على الخط',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.stitchCobalt,
+                foregroundColor: Colors.white,
+                minimumSize: Size(double.infinity, 50.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
               ),
             ),
           ],

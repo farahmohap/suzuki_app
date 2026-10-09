@@ -6,7 +6,7 @@ abstract final class AppValidators {
     if (value == null || value.trim().isEmpty) return 'رقم الجوال مطلوب';
     final digits = value.replaceAll(RegExp(r'\D'), '');
     if (!RegExp(r'^05[0-9]{8}$').hasMatch(digits)) {
-      return 'أدخل رقم جوال سعودي صحيح (05xxxxxxxx)';
+      return 'أدخل رقم جوال  صحيح (05xxxxxxxx)';
     }
     return null;
   }

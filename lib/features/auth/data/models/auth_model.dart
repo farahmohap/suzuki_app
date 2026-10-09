@@ -90,3 +90,42 @@ class AuthModel extends Equatable {
         avatarUrl,
       ];
 }
+
+
+enum Gender { male, female }
+
+class DriverRegistrationModel {
+  String fullName;
+  String phoneNumber;
+  int age;
+  Gender gender;
+  
+  // المستندات
+  String? nationalIdFrontPath;
+  String? nationalIdBackPath;
+  String? drivingLicensePath;
+  String? vehicleLicensePath;
+  String? criminalRecordPath; // الفيش والتشبيه
+
+  // بيانات وبيانات صوَر المركبة
+  String plateNumbers; // الأرقام
+  String plateLetters; // الحروف
+  String? vehicleFrontPhoto;
+  String? vehicleBackPhoto;
+  String? vehicleInteriorPhoto;
+
+  // المناطق والتشغيل (مدينة العبور وأحيائها)
+  List<String> selectedElObourDistricts;
+  String cashWalletNumber;
+
+  DriverRegistrationModel({
+    this.fullName = '',
+    this.phoneNumber = '',
+    this.age = 18,
+    this.gender = Gender.male,
+    this.plateNumbers = '',
+    this.plateLetters = '',
+    this.selectedElObourDistricts = const [],
+    this.cashWalletNumber = '',
+  });
+}
