@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:suzuki_app/core/router/app_router.dart';
 import 'core/constants/app_strings.dart';
 import 'core/di/injection.dart';
-import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -25,13 +25,8 @@ class SuzukiApp extends StatelessWidget {
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
-          routerConfig: AppRouter.router,
-          builder: (context, widget) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: widget ?? const SizedBox.shrink(),
-            );
-          },
+          routerConfig: appRouter,
+        // home: LoginScreen(),
         );
       },
     );
