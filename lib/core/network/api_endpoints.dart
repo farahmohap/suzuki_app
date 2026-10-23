@@ -1,18 +1,27 @@
-/// All REST API endpoint paths for سوزوكي backend.
-/// Use [ApiEndpoints.baseUrl] + path for absolute URLs.
+/// All REST API endpoint paths (relative to [AppConfig.apiBaseUrl]).
+/// Names follow the Backend Development Plan, section 4.
 abstract final class ApiEndpoints {
-  // ── Base ───────────────────────────────────────────────────────────────────
-  static const String baseUrl = 'https://api.suzuki-app.sa/v1';
-
-  // ── Auth ───────────────────────────────────────────────────────────────────
-  static const String login = '/auth/login';
-  static const String register = '/auth/register';
-  static const String verifyOtp = '/auth/verify-otp';
-  static const String resendOtp = '/auth/resend-otp';
+  // ── Auth (phase 1) ─────────────────────────────────────────────────────────
+  static const String otpRequest = '/auth/otp/request';
+  static const String otpVerify = '/auth/otp/verify';
   static const String refreshToken = '/auth/refresh';
   static const String logout = '/auth/logout';
+  static const String devices = '/devices';
 
-  // ── Passenger ──────────────────────────────────────────────────────────────
+  // ── Profile & shared (phase 2) ─────────────────────────────────────────────
+  static const String me = '/users/me';
+  static const String districts = '/districts';
+  static const String presignUpload = '/uploads/presign';
+
+  // ── Driver onboarding (phase 2) ────────────────────────────────────────────
+  static const String driverStep1 = '/drivers/onboarding/step1';
+  static const String driverStep2 = '/drivers/onboarding/step2';
+  static const String driverStep3 = '/drivers/onboarding/step3';
+  static const String driverSubmit = '/drivers/onboarding/submit';
+  static const String driverVerificationStatus = '/drivers/me/status';
+  static String driverDocument(String type) => '/drivers/me/documents/$type';
+
+  // ── Phase 3+ (existing screens still use these; align when built) ──────────
   static const String availableRoutes = '/passenger/routes';
   static const String bookSeat = '/passenger/bookings';
   static const String activeBooking = '/passenger/bookings/active';
@@ -22,7 +31,6 @@ abstract final class ApiEndpoints {
   static const String landmarks = '/passenger/landmarks';
   static String landmarkById(String id) => '/passenger/landmarks/$id';
 
-  // ── Driver ─────────────────────────────────────────────────────────────────
   static const String driverStatus = '/driver/status';
   static const String driverActiveRoute = '/driver/routes/active';
   static const String updateSeats = '/driver/seats';
@@ -30,7 +38,6 @@ abstract final class ApiEndpoints {
   static String driverEarningsByPeriod(String period) =>
       '/driver/earnings?period=$period';
 
-  // ── Shared ─────────────────────────────────────────────────────────────────
   static const String userProfile = '/user/profile';
   static const String updateProfile = '/user/profile';
   static const String uploadAvatar = '/user/avatar';

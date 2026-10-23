@@ -18,6 +18,8 @@ enum AppRoute {
   driverDashboard(path: 'dashboard', routeName: 'driver-dashboard'),
   driverTrip(path: 'trip/:tripId', routeName: 'driver-trip'),
   driverEarnings(path: 'earnings', routeName: 'driver-earnings'),
+  driverOnboarding(path: 'onboarding', routeName: 'driver-onboarding'),
+  driverStatus(path: 'status', routeName: 'driver-status'),
 
   // ── Shared ─────────────────────────────────────────────────────────────────
   splash(path: '/', routeName: 'splash');
@@ -40,6 +42,10 @@ extension AppRouteX on AppRoute {
         return '/driver/dashboard';
       case AppRoute.driverEarnings:
         return '/driver/earnings';
+      case AppRoute.driverOnboarding:
+        return '/driver/onboarding';
+      case AppRoute.driverStatus:
+        return '/driver/status';
       default:
         return path;
     }

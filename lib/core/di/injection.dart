@@ -1,8 +1,12 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
-import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../network/dio_client.dart';
+import '../session/session_events.dart';
+import '../storage/token_storage.dart';
 import 'injection.config.dart';
 
 /// Global [GetIt] service locator instance.
@@ -17,33 +21,19 @@ final getIt = GetIt.instance;
 )
 Future<void> configureDependencies() async => getIt.init();
 
-/// Registers external/async dependencies that injectable cannot auto-detect.
-/// Called inside the generated [init] extension but listed here for clarity.
+/// External/async dependencies injectable cannot auto-detect.
 @module
 abstract class RegisterModule {
-  /// [SharedPreferences] — resolved asynchronously before app starts.
   @preResolve
   Future<SharedPreferences> get sharedPreferences =>
       SharedPreferences.getInstance();
 
-  /// [Dio] — the configured HTTP client singleton.
   @lazySingleton
-  Dio get dio => _buildDio();
-
-  Dio _buildDio() {
-    return Dio(
-      BaseOptions(
-        baseUrl: 'https://api.suzuki-app.sa/v1',
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Accept-Language': 'ar',
-        },
-      ),
-    );
-  }
+FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
+  /// The ONE configured Dio (with auth + refresh interceptors).
+  @lazySingleton
+  Dio dio(TokenStorage tokens, SessionEvents session) =>
+      buildApiDio(tokens: tokens, session: session);
 }
 
 class RegisterModuleImpl extends RegisterModule {}

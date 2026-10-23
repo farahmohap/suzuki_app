@@ -39,7 +39,9 @@ dependencies:
   google_fonts: ^6.2.1
 
   # ── Localisation / Formatting ─────────────────────────────────────────────
-  intl: ^0.19.0
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
 
   # ── OpenStreetMap & Location ──────────────────────────────────────────────
   flutter_map: ^6.1.0
@@ -48,13 +50,14 @@ dependencies:
 
   # ── Firebase (coexists with REST layer) ───────────────────────────────────
   firebase_core: ^2.27.0
-  cloud_firestore: ^4.15.8
 
   # ── Helpers ───────────────────────────────────────────────────────────────
   url_launcher: ^6.2.5
   flutter_svg: ^2.0.10+1
   cupertino_icons: ^1.0.8
   image_picker: ^1.2.4
+  flutter_secure_storage: ^11.2.0
+  socket_io_client: ^3.1.6
 
 dev_dependencies:
   flutter_test:

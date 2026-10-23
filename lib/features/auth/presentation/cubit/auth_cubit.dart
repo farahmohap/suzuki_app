@@ -1,93 +1,120 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+
+import '../../../../core/session/session_events.dart';
+import '../../data/models/auth_model.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'auth_state.dart';
 
-/// Manages authentication lifecycle: login, register, OTP, and logout.
-/// Interacts directly with [AuthRepository] without use cases.
-@injectable
+/// App-wide session owner. A lazy singleton: the router, the screens and the
+/// network layer's "session expired" event all talk to this one instance.
+@lazySingleton
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit({
-    required AuthRepository authRepository,
-  })  : _authRepo = authRepository,
-        super(const AuthInitial());
+  AuthCubit(this._repo, this._session) : super(const AuthInitial()) {
+    _expiredSub = _session.onExpired.listen((_) => _setSignedOut());
+  }
 
-  final AuthRepository _authRepo;
+  final AuthRepository _repo;
+  final SessionEvents _session;
+  late final StreamSubscription<void> _expiredSub;
 
-  /// Checks stored token and emits [AuthAuthenticated] or [AuthUnauthenticated].
+  AuthModel? _user;
+  bool _resolved = false;
+
+  /// Signed-in user (used by the router redirect). Null when signed out.
+  AuthModel? get currentUser => _user;
+
+  /// True once [checkAuthStatus] finished at least once.
+  bool get isResolved => _resolved;
+
+  /// Called by the splash screen.
   Future<void> checkAuthStatus() async {
-    final isAuth = await _authRepo.isAuthenticated();
-    if (isAuth) {
-      final user = await _authRepo.getCachedUser();
-      if (user != null) {
-        emit(AuthAuthenticated(user));
-      } else {
-        emit(const AuthUnauthenticated());
-      }
-    } else {
+    final user = await _repo.restoreSession();
+    _resolved = true;
+    if (user == null) {
+      _user = null;
       emit(const AuthUnauthenticated());
+      return;
     }
+    _user = user;
+    emit(AuthAuthenticated(user));
+    unawaited(refreshUser()); // silent refresh; fixes stale driver status
   }
 
-  /// Attempts login with [phone] + [password].
-  Future<void> login({required String phone, required String password}) async {
-    emit(const AuthLoading());
-    final result = await _authRepo.login(phone: phone, password: password);
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
-    );
-  }
-
-  /// Registers a new user account.
-  Future<void> register({
+  /// Returns null on success, or an Arabic error message.
+  Future<String?> requestOtp({
     required String phone,
-    required String password,
-    required String fullName,
-    required String role,
+    required UserRole role,
   }) async {
     emit(const AuthLoading());
-    final result = await _authRepo.register(
-      phone: phone,
-      password: password,
-      fullName: fullName,
-      role: role,
-    );
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(AuthOtpSent(phone: phone)),
+    final r = await _repo.requestOtp(phone: phone, role: role);
+    return r.fold(
+      (f) {
+        emit(AuthError(f.message));
+        return f.message;
+      },
+      (_) {
+        emit(AuthOtpSent(phone: phone));
+        return null;
+      },
     );
   }
 
-  /// Verifies OTP entered by user.
-  Future<void> verifyOtp({
+  /// Returns null on success, or an Arabic error message.
+  /// On success the router redirect moves the user to the right home.
+  Future<String?> verifyOtp({
     required String phone,
-    required String otp,
+    required String code,
   }) async {
     emit(const AuthLoading());
-    final result = await _authRepo.verifyOtp(phone: phone, otp: otp);
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+    final r = await _repo.verifyOtp(phone: phone, code: code);
+    return r.fold(
+      (f) {
+        emit(AuthError(f.message));
+        return f.message;
+      },
+      (session) {
+        _resolved = true;
+        _user = session.user;
+        emit(AuthAuthenticated(session.user, isNewUser: session.isNewUser));
+        return null;
+      },
     );
   }
 
-  /// Resends OTP to [phone].
-  Future<void> resendOtp({required String phone}) async {
-    final result = await _authRepo.resendOtp(phone: phone);
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(AuthOtpResent(phone: phone)),
-    );
+  /// Re-reads `/users/me`. Silent: never emits loading/error states.
+  Future<void> refreshUser() async {
+    if (_user == null) return;
+    final r = await _repo.refreshUser();
+    r.fold((_) {}, (user) {
+      _user = user;
+      emit(AuthAuthenticated(user));
+    });
   }
 
-  /// Logs out the current user.
+  /// Applies a user returned by profile/onboarding calls.
+  Future<void> updateUser(AuthModel user) async {
+    _user = user;
+    await _repo.cacheUser(user);
+    emit(AuthAuthenticated(user));
+  }
+
   Future<void> logout() async {
-    emit(const AuthLoading());
-    final result = await _authRepo.logout();
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(const AuthUnauthenticated()),
-    );
+    await _repo.logout();
+    _setSignedOut();
+  }
+
+  void _setSignedOut() {
+    _user = null;
+    _resolved = true;
+    emit(const AuthUnauthenticated());
+  }
+
+  @override
+  Future<void> close() {
+    _expiredSub.cancel();
+    return super.close();
   }
 }

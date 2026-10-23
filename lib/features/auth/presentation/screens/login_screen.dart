@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/validators.dart';
+import '../../data/models/auth_model.dart';
+import '../cubit/auth_cubit.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -21,17 +25,33 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleSendOtp() {
-    final phone = _phoneController.text.trim();
-    if (phone.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('برجاء إدخال رقم هاتف صحيح مكون من 11 رقم'),
-        ),
-      );
+  bool _sending = false;
+
+  Future<void> _handleSendOtp() async {
+    if (_sending) return;
+    final error = AppValidators.phone(_phoneController.text);
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
+    final phone = AppValidators.normalizePhone(_phoneController.text)!;
 
+    setState(() => _sending = true);
+    final message = await context.read<AuthCubit>().requestOtp(
+      phone: phone,
+      role: _isDriver ? UserRole.driver : UserRole.passenger,
+    );
+    if (!mounted) return;
+    setState(() => _sending = false);
+
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
     context.pushNamed(
       AppRoute.otp.routeName,
       extra: {'phone': phone, 'isDriver': _isDriver},
@@ -501,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Submit Button
               ElevatedButton(
-                onPressed: _handleSendOtp,
+                onPressed: _sending ? null : _handleSendOtp,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
@@ -542,12 +562,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      context.pushNamed(
-                        AppRoute.register.routeName,
-                        extra: {'role': _isDriver ? 'driver' : 'passenger'},
-                      );
-                    },
+                    onTap: () => context.pushNamed(
+                      _isDriver
+                          ? AppRoute.driverOnboarding.routeName
+                          : AppRoute.register.routeName,
+                    ),
                     child: Text(
                       'إنشاء حساب جديد',
                       style: TextStyle(

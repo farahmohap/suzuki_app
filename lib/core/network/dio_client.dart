@@ -1,86 +1,115 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+
+import '../config/app_config.dart';
 import '../error/exceptions.dart';
-import 'api_endpoints.dart';
+import '../session/session_events.dart';
+import '../storage/token_storage.dart';
 import 'auth_interceptor.dart';
 import 'logging_interceptor.dart';
 
-/// Configured [Dio] singleton factory for سوزوكي API.
+/// Builds THE app Dio (registered once in DI — see core/di/injection.dart).
 ///
-/// Attaches:
-///   • [AuthInterceptor]    — injects Bearer token, handles 401 refresh
-///   • [LoggingInterceptor] — dev-only pretty request/response logs
-class DioClient {
-  DioClient._();
+/// Interceptors: [AuthInterceptor] (+ [LoggingInterceptor] in debug).
+Dio buildApiDio({
+  required TokenStorage tokens,
+  required SessionEvents session,
+}) {
+  final options = BaseOptions(
+    baseUrl: AppConfig.apiBaseUrl,
+    connectTimeout: const Duration(seconds: 20),
+    receiveTimeout: const Duration(seconds: 30),
+    sendTimeout: const Duration(seconds: 30),
+    headers: const {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Accept-Language': 'ar',
+    },
+    responseType: ResponseType.json,
+  );
 
-  static Dio? _instance;
+  final api = Dio(options);
+  final refreshDio = Dio(options.copyWith()); // no interceptors on purpose
 
-  static Dio get instance {
-    _instance ??= _build();
-    return _instance!;
-  }
-
-  static Dio _build() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Accept-Language': 'ar',
-        },
-        responseType: ResponseType.json,
-      ),
-    );
-
-    dio.interceptors.addAll([
-      AuthInterceptor(dio),
-      if (kDebugMode) LoggingInterceptor(),
-    ]);
-
-    return dio;
-  }
-
-  /// Resets the singleton — useful in tests.
-  @visibleForTesting
-  static void reset() => _instance = null;
+  api.interceptors.add(
+    AuthInterceptor(
+      apiDio: api,
+      refreshDio: refreshDio,
+      tokens: tokens,
+      session: session,
+    ),
+  );
+  if (kDebugMode) api.interceptors.add(LoggingInterceptor());
+  return api;
 }
 
-/// Extension on [DioException] → [AppException] mapping.
+/// Maps [DioException] to a typed [AppException].
+///
+/// Understands the backend error envelope:
+/// `{ "error": { "code": "...", "message_ar": "...", "fields": {...} } }`
 extension DioExceptionMapper on DioException {
   AppException toAppException() {
     switch (type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.sendTimeout:
+        return const NetworkException(
+          message: 'انتهت مهلة الاتصال، حاول مرة أخرى',
+          code: 'TIMEOUT',
+        );
       case DioExceptionType.connectionError:
         return const NetworkException();
-
-      case DioExceptionType.badResponse:
-        final status = response?.statusCode;
-        final data = response?.data;
-        final msg = data is Map ? (data['message'] ?? data['error']) : null;
-
-        if (status == 401) {
-          return const AuthException();
-        }
-        return ServerException(
-          message: msg?.toString() ?? 'خطأ في الخادم',
-          statusCode: status,
-          code: 'HTTP_$status',
-        );
-
       case DioExceptionType.cancel:
         return const NetworkException(message: 'تم إلغاء الطلب');
-
+      case DioExceptionType.badResponse:
+        return _fromResponse();
       default:
         return ServerException(
-          message: message ?? 'خطأ غير متوقع',
+          message: 'خطأ غير متوقع',
           code: 'DIO_UNKNOWN',
         );
     }
+  }
+
+  AppException _fromResponse() {
+    final status = response?.statusCode;
+    final data = response?.data;
+
+    String? code;
+    String? message;
+    Map<String, String>? fields;
+
+    if (data is Map) {
+      final err = data['error'];
+      if (err is Map) {
+        code = err['code']?.toString();
+        message = (err['message_ar'] ?? err['message'])?.toString();
+        final f = err['fields'];
+        if (f is Map) {
+          fields = f.map((k, v) => MapEntry(k.toString(), v.toString()));
+        }
+      } else {
+        message = (data['message'] ?? data['error'])?.toString();
+      }
+    }
+
+    if (status == 408 || status == 504) {
+      return NetworkException(
+        message: message ?? 'انتهت مهلة الاتصال، حاول مرة أخرى',
+        code: code ?? 'TIMEOUT',
+      );
+    }
+    if (status == 401) {
+      return AuthException(
+        message: message ?? 'غير مصرح لك بالوصول',
+        code: code ?? 'AUTH_ERROR',
+      );
+    }
+    return ServerException(
+      message: message ?? 'خطأ في الخادم',
+      statusCode: status,
+      code: code ?? 'HTTP_$status',
+      fields: fields,
+    );
   }
 }

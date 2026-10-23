@@ -19,12 +19,18 @@ final class ServerFailure extends Failure {
     super.message = 'خطأ في الخادم، يرجى المحاولة لاحقًا',
     super.code,
     this.statusCode,
+    this.fields,
   });
 
   final int? statusCode;
+  final Map<String, String>? fields;
 
-  factory ServerFailure.fromException(ServerException e) =>
-      ServerFailure(message: e.message, code: e.code, statusCode: e.statusCode);
+  factory ServerFailure.fromException(ServerException e) => ServerFailure(
+        message: e.message,
+        code: e.code,
+        statusCode: e.statusCode,
+        fields: e.fields,
+      );
 }
 
 /// Device has no internet connection or request timed out.
@@ -55,6 +61,9 @@ final class AuthFailure extends Failure {
     super.message = 'بيانات الدخول غير صحيحة',
     super.code = 'AUTH_ERROR',
   });
+
+  factory AuthFailure.fromException(AuthException e) =>
+      AuthFailure(message: e.message, code: e.code);
 }
 
 /// Session expired — token is missing or no longer valid.
