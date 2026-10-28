@@ -38,20 +38,23 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     final phone = AppValidators.normalizePhone(_phoneController.text)!;
 
-    setState(() => _sending = true);
-    final message = await context.read<AuthCubit>().requestOtp(
-      phone: phone,
-      role: _isDriver ? UserRole.driver : UserRole.passenger,
-    );
-    if (!mounted) return;
-    setState(() => _sending = false);
+    if (!_isDriver) {
+      setState(() => _sending = true);
+      final message = await context.read<AuthCubit>().requestOtp(
+        phone: phone,
+        role: UserRole.passenger,
+      );
+      if (!mounted) return;
+      setState(() => _sending = false);
 
-    if (message != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-      return;
+      if (message != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        return;
+      }
     }
+
     context.pushNamed(
       AppRoute.otp.routeName,
       extra: {'phone': phone, 'isDriver': _isDriver},
@@ -549,37 +552,35 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 16.h),
 
-              // Navigation to Register
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'أول مرة تنورنا؟ ',
-                    style: TextStyle(
-                      fontFamily: 'IBM Plex Sans',
-                      fontSize: 14.sp,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => context.pushNamed(
-                      _isDriver
-                          ? AppRoute.driverOnboarding.routeName
-                          : AppRoute.register.routeName,
-                    ),
-                    child: Text(
-                      'إنشاء حساب جديد',
+              // Passenger profile creation remains available separately.
+              if (!_isDriver)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'أول مرة تنورنا؟ ',
                       style: TextStyle(
                         fontFamily: 'IBM Plex Sans',
                         fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                        decoration: TextDecoration.underline,
+                        color: AppColors.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    GestureDetector(
+                      onTap: () =>
+                          context.pushNamed(AppRoute.register.routeName),
+                      child: Text(
+                        'إنشاء حساب جديد',
+                        style: TextStyle(
+                          fontFamily: 'IBM Plex Sans',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

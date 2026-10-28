@@ -24,10 +24,27 @@ enum VerificationStatus {
   suspended;
 
   static VerificationStatus fromString(String? s) {
-    for (final v in VerificationStatus.values) {
-      if (v.name == s) return v;
+    // The API's account lifecycle names differ from the driver's review
+    // names used internally by the app.
+    switch (s) {
+      case 'needs_profile':
+      case 'none':
+        return VerificationStatus.none;
+      case 'draft':
+        return VerificationStatus.draft;
+      case 'pending_review':
+      case 'pending':
+        return VerificationStatus.pending;
+      case 'active':
+      case 'approved':
+        return VerificationStatus.approved;
+      case 'rejected':
+        return VerificationStatus.rejected;
+      case 'suspended':
+        return VerificationStatus.suspended;
+      default:
+        return VerificationStatus.none;
     }
-    return VerificationStatus.none;
   }
 }
 
@@ -72,7 +89,8 @@ class AuthModel extends Equatable {
       avatarUrl: u['avatar_url'] as String?,
       profileComplete: u['profile_complete'] as bool? ?? false,
       driverStatus: VerificationStatus.fromString(
-        (u['driver_status'] ?? u['verification_status']) as String?,
+        (u['status'] ?? u['driver_status'] ?? u['verification_status'])
+            as String?,
       ),
     );
   }

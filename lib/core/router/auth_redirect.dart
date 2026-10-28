@@ -18,12 +18,9 @@ String? resolveRedirect({
   if (!resolved) return location == splash ? null : splash;
 
   if (user == null) {
-    // Driver registration is an independent entry flow; it must be reachable
-    // before the user has an authenticated session.
     return (location == login ||
             location == otp ||
-            location == register ||
-            location == '/driver/onboarding')
+            location == register)
         ? null
         : login;
   }

@@ -114,9 +114,20 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
 
   final DriverOnboardingRepository _repo;
   final ProfileRepository _profileRepo;
+  bool _previewMode = false;
 
   /// Loads districts and resumes at the step the backend says is next.
-  Future<void> init() async {
+  Future<void> init({bool previewMode = false}) async {
+    _previewMode = previewMode;
+    if (_previewMode) {
+      emit(state.copyWith(
+        districts: const [
+          DistrictModel(id: 'preview-district', nameAr: 'مدينة العبور'),
+        ],
+      ));
+      return;
+    }
+
     final districts = await _profileRepo.getDistricts();
     districts.fold(
       (f) => emit(state.copyWith(error: f.message)),
@@ -142,7 +153,12 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
     required String nationalId,
     required DateTime birthDate,
     required String districtId,
+    required Gender gender,
   }) async {
+    if (_previewMode) {
+      emit(state.copyWith(step: 1, clearError: true));
+      return;
+    }
     emit(state.copyWith(busy: true, clearError: true));
 
     String? avatarKey = state.avatarKey;
@@ -164,6 +180,7 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
       nationalId: nationalId,
       birthDate: birthDate,
       districtId: districtId,
+      gender: gender,
       avatarKey: cleanKey,
     ));
     r.fold(
@@ -178,6 +195,10 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
 
   /// Step 2: vehicle and plate.
   Future<void> saveVehicle(VehicleInput input) async {
+    if (_previewMode) {
+      emit(state.copyWith(step: 2, clearError: true));
+      return;
+    }
     emit(state.copyWith(busy: true, clearError: true));
     final r = await _repo.saveStep2(input);
     r.fold(
@@ -188,6 +209,18 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
 
   /// Step 3: picks one file and uploads it with progress.
   Future<void> uploadDocument(DocType type, String path) async {
+    if (_previewMode) {
+      _setSlot(
+        type,
+        DocSlot(
+          status: DocUploadStatus.uploaded,
+          localPath: path,
+          fileKey: 'preview-${type.apiKey}',
+          progress: 1,
+        ),
+      );
+      return;
+    }
     _setSlot(type, DocSlot(status: DocUploadStatus.uploading, localPath: path));
     final r = await _repo.uploadFile(
       path: path,
@@ -227,6 +260,10 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
 
   /// Saves step 3 and submits the application.
   Future<void> submit() async {
+    if (_previewMode) {
+      emit(state.copyWith(submitted: true, clearError: true));
+      return;
+    }
     if (!state.allDocsUploaded) {
       emit(state.copyWith(error: 'ارفع كل المستندات والصور أولًا'));
       return;

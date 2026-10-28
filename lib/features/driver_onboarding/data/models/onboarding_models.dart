@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/network/api_response.dart';
 import '../../../auth/data/models/auth_model.dart';
+import '../../../profile/data/models/profile_models.dart';
 
 /// Document / photo types the backend expects (`driver_documents.type`).
 enum DocType {
@@ -33,6 +34,7 @@ class PersonalInput extends Equatable {
     required this.nationalId,
     required this.birthDate,
     required this.districtId,
+    required this.gender,
     this.avatarKey,
   });
 
@@ -40,6 +42,7 @@ class PersonalInput extends Equatable {
   final String nationalId;
   final DateTime birthDate;
   final String districtId;
+  final Gender gender;
   final String? avatarKey;
 
   Map<String, dynamic> toJson() => {
@@ -48,12 +51,13 @@ class PersonalInput extends Equatable {
         'birth_date':
             '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
         'district_id': districtId,
+        'gender': gender.apiValue,
         if (avatarKey != null) 'avatar_key': avatarKey,
       };
 
   @override
   List<Object?> get props =>
-      [fullName, nationalId, birthDate, districtId, avatarKey];
+      [fullName, nationalId, birthDate, districtId, gender, avatarKey];
 }
 
 class VehicleInput extends Equatable {
@@ -61,8 +65,7 @@ class VehicleInput extends Equatable {
     required this.plateNumbers,
     required this.plateLetters,
     required this.model,
-    required this.year,
-    required this.color,
+    required this.carColor,
   });
 
   /// e.g. `2845`
@@ -71,20 +74,18 @@ class VehicleInput extends Equatable {
   /// e.g. `ق ن ص`
   final String plateLetters;
   final String model;
-  final int year;
-  final String color;
+  final String carColor;
 
   Map<String, dynamic> toJson() => {
         'plate_numbers': plateNumbers,
         'plate_letters': plateLetters,
         'model': model,
-        'year': year,
-        'color': color,
+        'car_color': carColor,
       };
 
   @override
   List<Object?> get props =>
-      [plateNumbers, plateLetters, model, year, color];
+      [plateNumbers, plateLetters, model, carColor];
 }
 
 /// Review state of one uploaded document (from `GET /drivers/me/status`).

@@ -100,7 +100,9 @@ GoRouter createAppRouter(AuthCubit auth) {
           GoRoute(
             path: AppRoute.driverOnboarding.path,
             name: AppRoute.driverOnboarding.routeName,
-            builder: (_, _) => const DriverOnboardingScreen(),
+            builder: (_, _) => DriverOnboardingScreen(
+              previewMode: auth.isPreviewDriverSession,
+            ),
           ),
           GoRoute(
             path: AppRoute.driverStatus.path,

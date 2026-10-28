@@ -18,6 +18,7 @@ class DocumentTile extends StatelessWidget {
     this.onRemove,
     this.rejectReason,
     this.useCamera = false,
+    this.enabled = true,
   });
 
   final String label;
@@ -27,6 +28,7 @@ class DocumentTile extends StatelessWidget {
   final VoidCallback? onRemove;
   final String? rejectReason;
   final bool useCamera;
+  final bool enabled;
 
   Future<void> _pick(BuildContext context) async {
     final source = useCamera
@@ -81,7 +83,7 @@ class DocumentTile extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: uploading ? null : () => _pick(context),
+        onTap: !enabled || uploading ? null : () => _pick(context),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -117,7 +119,7 @@ class DocumentTile extends StatelessWidget {
                   if (done) Icon(Icons.check_circle, color: color, size: 30),
                   if (!done && !uploading)
                     Icon(Icons.add_a_photo_outlined, color: color, size: 28),
-                  if (done && onRemove != null)
+                  if (done && enabled && onRemove != null)
                     IconButton(
                       onPressed: onRemove,
                       icon: const Icon(Icons.close),
