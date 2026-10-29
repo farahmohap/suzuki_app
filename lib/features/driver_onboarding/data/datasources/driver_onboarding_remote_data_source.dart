@@ -47,7 +47,7 @@ class DriverOnboardingRemoteDataSourceImpl
       if (e.response?.statusCode == 405) {
         return await _dio.put(
           path,
-          data: formData,
+          data: formData.clone(),
           options: Options(contentType: 'multipart/form-data'),
         );
       }
@@ -74,10 +74,16 @@ class DriverOnboardingRemoteDataSourceImpl
 
   @override
   Future<DriverStepResponse> saveStep2(VehicleInput input) => _run(() async {
-        final res = await _dio.put(
-          ApiEndpoints.driverStep2,
-          data: input.toJson(),
-        );
+        final formData = FormData.fromMap(input.toJson());
+        for (var i = 0; i < input.documents.length; i++) {
+          final document = input.documents[i];
+          formData.fields.add(MapEntry('documents[$i][type]', document.type));
+          formData.files.add(MapEntry(
+            'documents[$i][file_key]',
+            await MultipartFile.fromFile(document.filePath),
+          ));
+        }
+        final res = await _sendMultipartPut(ApiEndpoints.driverStep2, formData);
         return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
       });
 

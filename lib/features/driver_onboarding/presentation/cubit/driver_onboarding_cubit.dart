@@ -178,9 +178,41 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     final data = _loaded;
     if (data == null) return;
 
+    const vehicleDocumentTypes = [
+      DocType.vehicleFront,
+      DocType.vehicleRear,
+      DocType.vehicleInterior,
+    ];
+    final missing = vehicleDocumentTypes.where((type) {
+      final slot = data.slot(type);
+      return !slot.isUploaded || slot.localPath == 'existing';
+    }).toList();
+    if (missing.isNotEmpty) {
+      emit(DriverOnboardingSaveVehicleFailureState(
+        errorMessage:
+            'ارفع صور السيارة المطلوبة أولًا (${missing.map((type) => type.labelAr).join('، ')})',
+        data: data,
+      ));
+      return;
+    }
+
+    final request = VehicleInput(
+      plateNumbers: input.plateNumbers,
+      plateLetters: input.plateLetters,
+      model: input.model,
+      color: input.color,
+      documents: [
+        for (final type in vehicleDocumentTypes)
+          DriverDocumentInput(
+            type: type.apiKey,
+            filePath: data.slot(type).localPath!,
+          ),
+      ],
+    );
+
     emit(DriverOnboardingSaveVehicleLoadingState(data: data));
 
-    final r = await _repo.saveStep2(input);
+    final r = await _repo.saveStep2(request);
     r.fold(
       (f) => emit(DriverOnboardingSaveVehicleFailureState(
         errorMessage: f.message,
@@ -230,8 +262,15 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     final data = _loaded;
     if (data == null) return;
 
+    const step3DocumentTypes = [
+      DocType.nationalIdFront,
+      DocType.nationalIdBack,
+      DocType.drivingLicense,
+      DocType.vehicleLicense,
+      DocType.criminalRecord,
+    ];
     final missing =
-        DocType.values.where((t) => !data.slot(t).isUploaded).toList();
+        step3DocumentTypes.where((t) => !data.slot(t).isUploaded).toList();
     if (missing.isNotEmpty) {
       emit(DriverOnboardingSubmitFailureState(
         errorMessage:
@@ -244,7 +283,7 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     emit(DriverOnboardingSubmitLoadingState(data: data));
 
     final filePaths = {
-      for (final t in DocType.values) t: data.slot(t).localPath!,
+      for (final t in step3DocumentTypes) t: data.slot(t).localPath!,
     };
 
     final r = await _repo.saveDocumentsAndSubmit(filePaths);

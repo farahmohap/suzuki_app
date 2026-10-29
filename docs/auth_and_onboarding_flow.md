@@ -167,16 +167,9 @@ Requirements:
 
 `PUT /drivers/register/step2`
 
-Request:
+Request (`multipart/form-data`):
 
-```json
-{
-  "plate_numbers": "2845",
-  "plate_letters": "ق ن ص",
-  "model": "Suzuki Every",
-  "color": "أبيض"
-}
-```
+Text fields: `plate_numbers`, `plate_letters`, `model`, and `color`. Include three vehicle files using indexed document parts: `documents[0][type]=vehicle_front` with `documents[0][file]`, `documents[1][type]=vehicle_back` with `documents[1][file]`, and `documents[2][type]=vehicle_interior` with `documents[2][file]`.
 
 Requirements:
 
@@ -194,11 +187,11 @@ After steps 1 and 2 are both saved, set the driver's status to `needs_documents`
 
 `PUT /drivers/register/step3`
 
-The app sends one `multipart/form-data` request containing all eight files. File fields are `documents[national_id_front]`, `documents[national_id_back]`, `documents[driving_license]`, `documents[vehicle_license]`, `documents[criminal_record]`, `documents[vehicle_front]`, `documents[vehicle_rear]`, and `documents[vehicle_interior]`.
+The app sends one `multipart/form-data` request containing the five remaining files: `national_id_front`, `national_id_back`, `driving_license`, `vehicle_license`, and `criminal_record`.
 
-The accepted document types are exactly: `national_id_front`, `national_id_back`, `driving_license`, `vehicle_license`, `criminal_record`, `vehicle_front`, `vehicle_rear`, and `vehicle_interior`. National ID front and back remain separate document records.
+The accepted document types are exactly: `national_id_front`, `national_id_back`, `driving_license`, `vehicle_license`, `criminal_record`, `vehicle_front`, `vehicle_back`, and `vehicle_interior`. National ID front and back remain separate document records. The three vehicle images are submitted in step 2.
 
-After accepting step 3, validate that steps 1 and 2 are complete, all eight required files are present, and the driver has no already-submitted active application. On success, set status to `pending_review` and record `submitted_at`. The driver cannot go online while pending review.
+After accepting step 3, validate that steps 1 and 2 are complete, all eight required files across steps 2 and 3 are present, and the driver has no already-submitted active application. On success, set status to `pending_review` and record `submitted_at`. The driver cannot go online while pending review.
 
 ### Replace a rejected document
 
@@ -225,7 +218,7 @@ Return the current status and enough information for the app to show progress an
       { "type": "vehicle_license", "status": "missing", "reject_reason": null },
       { "type": "criminal_record", "status": "missing", "reject_reason": null },
       { "type": "vehicle_front", "status": "missing", "reject_reason": null },
-      { "type": "vehicle_rear", "status": "missing", "reject_reason": null },
+      { "type": "vehicle_back", "status": "missing", "reject_reason": null },
       { "type": "vehicle_interior", "status": "missing", "reject_reason": null }
     ]
   }
@@ -238,7 +231,7 @@ Return one record per required document type, with status `missing`, `uploaded`,
 
 - A new driver starts at `needs_profile`.
 - Saving steps 1 and 2 moves the driver to `needs_documents`.
-- Submitting all eight required documents moves the driver to `pending_review`.
+- Saving the three vehicle documents in step 2 and submitting the five remaining documents in step 3 moves the driver to `pending_review`.
 - Admin review moves the driver to `approved` or `rejected`.
 - Admin may set any account to `suspended`.
 - Only `approved` drivers may use driver features that require approval, including going online.

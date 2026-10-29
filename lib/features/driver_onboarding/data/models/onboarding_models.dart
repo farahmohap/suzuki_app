@@ -12,7 +12,7 @@ enum DocType {
   vehicleLicense('vehicle_license', 'رخصة السيارة'),
   criminalRecord('criminal_record', 'الفيش والتشبيه'),
   vehicleFront('vehicle_front', 'صورة السوزوكي - من الأمام'),
-  vehicleRear('vehicle_rear', 'صورة السوزوكي - من الخلف'),
+  vehicleRear('vehicle_back', 'صورة السوزوكي - من الخلف'),
   vehicleInterior('vehicle_interior', 'صورة السوزوكي - من الداخل');
 
   const DocType(this.apiKey, this.labelAr);
@@ -70,6 +70,7 @@ class VehicleInput extends Equatable {
     required this.plateLetters,
     required this.model,
     required this.color,
+    this.documents = const [],
   });
 
   /// e.g. `2845`
@@ -79,6 +80,7 @@ class VehicleInput extends Equatable {
   final String plateLetters;
   final String model;
   final String color;
+  final List<DriverDocumentInput> documents;
 
   Map<String, dynamic> toJson() => {
         'plate_numbers': plateNumbers,
@@ -88,7 +90,21 @@ class VehicleInput extends Equatable {
       };
 
   @override
-  List<Object?> get props => [plateNumbers, plateLetters, model, color];
+  List<Object?> get props => [plateNumbers, plateLetters, model, color, documents];
+}
+
+/// A vehicle document file sent as multipart data in the step 2 request.
+class DriverDocumentInput extends Equatable {
+  const DriverDocumentInput({
+    required this.type,
+    required this.filePath,
+  });
+
+  final String type;
+  final String filePath;
+
+  @override
+  List<Object?> get props => [type, filePath];
 }
 
 /// Review state of one uploaded document (from `GET /drivers/me/status`).

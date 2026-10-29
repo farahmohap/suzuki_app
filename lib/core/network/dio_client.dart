@@ -49,7 +49,8 @@ Dio buildApiDio({
 
 PrettyDioLogger _prettyApiLogger() => PrettyDioLogger(
   request: true,
-  requestHeader: true,
+  // Authorization and other credentials must not appear in debug logs.
+  requestHeader: false,
   requestBody: true,
   responseHeader: true,
   // PrettyDioLogger prints bodies for both onResponse (2xx) and onError
