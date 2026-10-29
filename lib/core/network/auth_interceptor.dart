@@ -59,7 +59,7 @@ class AuthInterceptor extends QueuedInterceptor {
     final current = await _tokens.readAccess();
     final used = req.headers['Authorization'];
     if (current != null && current.isNotEmpty && 'Bearer $current' != used) {
-      return _retry(req, current, handler, err);
+      return _retry(req, current, handler);
     }
 
     final refresh = await _tokens.readRefresh();
@@ -83,7 +83,7 @@ class AuthInterceptor extends QueuedInterceptor {
         return handler.next(err);
       }
       await _tokens.save(access: access, refresh: newRefresh);
-      return _retry(req, access, handler, err);
+      return _retry(req, access, handler);
     } on DioException catch (e) {
       final code = e.response?.statusCode;
       // Only a definite rejection ends the session; a network blip does not.
@@ -96,14 +96,22 @@ class AuthInterceptor extends QueuedInterceptor {
     RequestOptions req,
     String token,
     ErrorInterceptorHandler handler,
-    DioException original,
   ) async {
-    req.headers['Authorization'] = 'Bearer $token';
-    req.extra[_kRetried] = true;
+    final retryOptions = req.copyWith(
+      data: req.data is FormData ? (req.data as FormData).clone() : req.data,
+    );
+    retryOptions.headers['Authorization'] = 'Bearer $token';
+    retryOptions.extra[_kRetried] = true;
     try {
-      handler.resolve(await _api.fetch(req));
+      handler.resolve(await _api.fetch(retryOptions));
     } on DioException catch (e) {
       handler.next(e);
+    } catch (error, stackTrace) {
+      handler.next(DioException(
+        requestOptions: retryOptions,
+        error: error,
+        stackTrace: stackTrace,
+      ));
     }
   }
 

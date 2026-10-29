@@ -1,132 +1,147 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../profile/data/models/profile_models.dart';
+import '../../../profile/data/repositories/profile_repository.dart';
 import '../../data/models/onboarding_models.dart';
 import '../../data/repositories/driver_onboarding_repository.dart';
+import 'driver_onboarding_state.dart';
 
-enum DocUploadStatus { empty, uploading, uploaded, failed }
-
-class DocSlot extends Equatable {
-  const DocSlot({
-    this.status = DocUploadStatus.empty,
-    this.localPath,
-    this.progress = 0,
-  });
-
-  final DocUploadStatus status;
-  final String? localPath;
-  final double progress;
-
-  DocSlot copyWith({
-    DocUploadStatus? status,
-    String? localPath,
-    double? progress,
-  }) =>
-      DocSlot(
-        status: status ?? this.status,
-        localPath: localPath ?? this.localPath,
-        progress: progress ?? this.progress,
-      );
-
-  @override
-  List<Object?> get props => [status, localPath, progress];
-}
-
-class OnboardingState extends Equatable {
-  const OnboardingState({
-    this.step = 0,
-    this.busy = false,
-    this.error,
-    this.avatarPath,
-    this.docs = const {},
-    this.submitted = false,
-  });
-
-  /// 0 = personal, 1 = vehicle, 2 = documents.
-  final int step;
-  final bool busy;
-  final String? error;
-  final String? avatarPath;
-  final Map<DocType, DocSlot> docs;
-
-  /// Application submitted; the screen should refresh the user.
-  final bool submitted;
-
-  DocSlot slot(DocType t) => docs[t] ?? const DocSlot();
-
-  bool get allDocsUploaded => DocType.values
-      .every((t) => slot(t).status == DocUploadStatus.uploaded);
-
-  bool get anyUploading =>
-      docs.values.any((d) => d.status == DocUploadStatus.uploading);
-
-  OnboardingState copyWith({
-    int? step,
-    bool? busy,
-    String? error,
-    bool clearError = false,
-    String? avatarPath,
-    Map<DocType, DocSlot>? docs,
-    bool? submitted,
-  }) =>
-      OnboardingState(
-        step: step ?? this.step,
-        busy: busy ?? this.busy,
-        error: clearError ? null : (error ?? this.error),
-        avatarPath: avatarPath ?? this.avatarPath,
-        docs: docs ?? this.docs,
-        submitted: submitted ?? this.submitted,
-      );
-
-  @override
-  List<Object?> get props => [
-        step,
-        busy,
-        error,
-        avatarPath,
-        docs,
-        submitted,
-      ];
-}
+export 'driver_onboarding_state.dart';
 
 /// Drives the 3-step driver registration wizard.
 @injectable
-class DriverOnboardingCubit extends Cubit<OnboardingState> {
-  DriverOnboardingCubit(this._repo) : super(const OnboardingState());
+class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
+  DriverOnboardingCubit(this._repo, this._profileRepo)
+      : super(const DriverOnboardingInitialState());
 
   final DriverOnboardingRepository _repo;
+  final ProfileRepository _profileRepo;
 
-  /// Resumes at the first incomplete step reported by the backend.
-  Future<void> init() async {
-    final status = await _repo.getStatus();
-    status.fold(
-      (failure) => emit(state.copyWith(error: failure.message)),
-      (info) => emit(state.copyWith(step: info.nextStepIndex)),
-    );
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  DriverOnboardingLoadedState? get _loaded {
+    final s = state;
+    if (s is DriverOnboardingLoadedState) return s;
+    if (s is DriverOnboardingSavePersonalLoadingState) return s.data;
+    if (s is DriverOnboardingSavePersonalFailureState) return s.data;
+    if (s is DriverOnboardingSavePersonalSuccessState) return s.data;
+    if (s is DriverOnboardingSaveVehicleLoadingState) return s.data;
+    if (s is DriverOnboardingSaveVehicleFailureState) return s.data;
+    if (s is DriverOnboardingSaveVehicleSuccessState) return s.data;
+    if (s is DriverOnboardingSubmitLoadingState) return s.data;
+    if (s is DriverOnboardingSubmitFailureState) return s.data;
+    return null;
   }
+
+  // ── init ─────────────────────────────────────────────────────────────────
+
+  /// Loads districts + resumes at the first incomplete step reported by the
+  /// backend.
+  Future<void> init() async {
+    emit(const DriverOnboardingLoadingState());
+
+    // Load districts and onboarding status in parallel.
+    final results = await Future.wait([
+      _profileRepo.getDistricts(),
+      _repo.getStatus(),
+    ]);
+
+    final districtsResult = results[0];
+    final statusResult = results[1];
+
+    late final List<DistrictModel> districts;
+    late final VerificationInfo statusInfo;
+
+    // Districts
+    final dFold = districtsResult.fold(
+      (f) {
+        emit(DriverOnboardingLoadFailureState(errorMessage: f.message));
+        return false;
+      },
+      (list) {
+        districts = list as List<DistrictModel>;
+        return true;
+      },
+    );
+    if (!dFold) return;
+
+    // Status
+    final sFold = statusResult.fold(
+      (f) {
+        emit(DriverOnboardingLoadFailureState(errorMessage: f.message));
+        return false;
+      },
+      (info) {
+        statusInfo = info as VerificationInfo;
+        return true;
+      },
+    );
+    if (!sFold) return;
+
+    // Prepopulate any already-uploaded documents reported by backend
+    final Map<DocType, DocSlot> docs = {};
+    for (final doc in statusInfo.documents) {
+      if (doc.status == 'uploaded' || doc.status == 'approved') {
+        docs[doc.type] = const DocSlot(
+          status: DocUploadStatus.uploaded,
+          localPath: 'existing',
+          progress: 1,
+        );
+      }
+    }
+
+    emit(DriverOnboardingLoadedState(
+      step: statusInfo.nextStepIndex,
+      districts: districts,
+      docs: docs,
+    ));
+  }
+
+  // ── navigation ──────────────────────────────────────────────────────────
 
   void back() {
-    if (state.step > 0) emit(state.copyWith(step: state.step - 1, clearError: true));
+    final data = _loaded;
+    if (data == null || data.step <= 0) return;
+    emit(data.copyWith(step: data.step - 1));
   }
 
-  void setAvatar(String path) =>
-      emit(state.copyWith(avatarPath: path));
+  void setAvatar(String path) {
+    final data = _loaded;
+    if (data == null) return;
+    emit(data.copyWith(avatarPath: path));
+  }
 
-  /// Step 1: sends personal details and the avatar as multipart form data.
+  void _setSlot(DocType type, DocSlot slot) {
+    final data = _loaded;
+    if (data == null) return;
+    final docs = Map<DocType, DocSlot>.from(data.docs)..[type] = slot;
+    emit(data.copyWith(docs: docs));
+  }
+
+  // ── Step 1 ──────────────────────────────────────────────────────────────
+
+  /// Sends Step 1 personal details and avatar file directly via multipart form data.
   Future<void> savePersonal({
     required String fullName,
     required String nationalId,
     required DateTime birthDate,
     required Gender gender,
+    required int districtId,
   }) async {
-    final path = state.avatarPath;
-    if (path == null) {
-      emit(state.copyWith(error: 'الصورة الشخصية مطلوبة'));
+    final data = _loaded;
+    if (data == null) return;
+
+    final path = data.avatarPath;
+    if (path == null || path.isEmpty) {
+      emit(DriverOnboardingSavePersonalFailureState(
+        errorMessage: 'الصورة الشخصية مطلوبة',
+        data: data,
+      ));
       return;
     }
-    emit(state.copyWith(busy: true, clearError: true));
+
+    emit(DriverOnboardingSavePersonalLoadingState(data: data));
 
     final r = await _repo.saveStep1(PersonalInput(
       fullName: fullName,
@@ -134,28 +149,96 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
       birthDate: birthDate,
       gender: gender,
       avatarPath: path,
+      districtId: districtId,
     ));
+
     r.fold(
-      (f) => emit(state.copyWith(busy: false, error: f.message)),
-      (_) => emit(state.copyWith(
-        busy: false,
-        step: 1,
+      (f) => emit(DriverOnboardingSavePersonalFailureState(
+        errorMessage: f.message,
+        data: data,
       )),
+      (stepResponse) {
+        final nextStep = stepResponse.nextStepIndex > 0
+            ? stepResponse.nextStepIndex
+            : 1;
+        final next = data.copyWith(step: nextStep);
+        emit(DriverOnboardingSavePersonalSuccessState(
+          data: next,
+          response: stepResponse,
+        ));
+        emit(next);
+      },
     );
   }
 
-  /// Step 2: vehicle and plate.
+  // ── Step 2 ──────────────────────────────────────────────────────────────
+
+  /// Vehicle and plate.
   Future<void> saveVehicle(VehicleInput input) async {
-    emit(state.copyWith(busy: true, clearError: true));
-    final r = await _repo.saveStep2(input);
+    final data = _loaded;
+    if (data == null) return;
+
+    const vehicleDocumentTypes = [
+      DocType.vehicleFront,
+      DocType.vehicleRear,
+      DocType.vehicleInterior,
+    ];
+    final missing = vehicleDocumentTypes.where((type) {
+      final slot = data.slot(type);
+      return !slot.isUploaded || slot.localPath == 'existing';
+    }).toList();
+    if (missing.isNotEmpty) {
+      emit(DriverOnboardingSaveVehicleFailureState(
+        errorMessage:
+            'ارفع صور السيارة المطلوبة أولًا (${missing.map((type) => type.labelAr).join('، ')})',
+        data: data,
+      ));
+      return;
+    }
+
+    final request = VehicleInput(
+      plateNumbers: input.plateNumbers,
+      plateLetters: input.plateLetters,
+      model: input.model,
+      color: input.color,
+      documents: [
+        for (final type in vehicleDocumentTypes)
+          DriverDocumentInput(
+            type: type.apiKey,
+            filePath: data.slot(type).localPath!,
+          ),
+      ],
+    );
+
+    emit(DriverOnboardingSaveVehicleLoadingState(data: data));
+
+    final r = await _repo.saveStep2(request);
     r.fold(
-      (f) => emit(state.copyWith(busy: false, error: f.message)),
-      (_) => emit(state.copyWith(busy: false, step: 2)),
+      (f) => emit(DriverOnboardingSaveVehicleFailureState(
+        errorMessage: f.message,
+        data: data,
+      )),
+      (stepResponse) {
+        final nextStep = stepResponse.nextStepIndex > 1
+            ? stepResponse.nextStepIndex
+            : 2;
+        final next = data.copyWith(step: nextStep);
+        emit(DriverOnboardingSaveVehicleSuccessState(
+          data: next,
+          response: stepResponse,
+        ));
+        emit(next);
+      },
     );
   }
 
-  /// Step 3: keeps selected files locally; they are sent together on submit.
-  Future<void> uploadDocument(DocType type, String path) async {
+  // ── Step 3 ──────────────────────────────────────────────────────────────
+
+  /// Records picked document locally; files are sent directly upon submit.
+  void uploadDocument(DocType type, String path) {
+    final data = _loaded;
+    if (data == null) return;
+
     _setSlot(
       type,
       DocSlot(
@@ -167,29 +250,51 @@ class DriverOnboardingCubit extends Cubit<OnboardingState> {
   }
 
   void removeDocument(DocType type) {
-    final docs = Map<DocType, DocSlot>.from(state.docs)..remove(type);
-    emit(state.copyWith(docs: docs));
+    final data = _loaded;
+    if (data == null) return;
+
+    final docs = Map<DocType, DocSlot>.from(data.docs)..remove(type);
+    emit(data.copyWith(docs: docs));
   }
 
-  /// Saves step 3 and submits the application.
+  /// Sends step 3 documents directly and submits the application.
   Future<void> submit() async {
-    if (!state.allDocsUploaded) {
-      emit(state.copyWith(error: 'ارفع كل المستندات والصور أولًا'));
+    final data = _loaded;
+    if (data == null) return;
+
+    const step3DocumentTypes = [
+      DocType.nationalIdFront,
+      DocType.nationalIdBack,
+      DocType.drivingLicense,
+      DocType.vehicleLicense,
+      DocType.criminalRecord,
+    ];
+    final missing =
+        step3DocumentTypes.where((t) => !data.slot(t).isUploaded).toList();
+    if (missing.isNotEmpty) {
+      emit(DriverOnboardingSubmitFailureState(
+        errorMessage:
+            'ارفع كل المستندات والصور المطلوبة أولًا (${missing.map((e) => e.labelAr).join("، ")})',
+        data: data,
+      ));
       return;
     }
-    emit(state.copyWith(busy: true, clearError: true));
+
+    emit(DriverOnboardingSubmitLoadingState(data: data));
+
     final filePaths = {
-      for (final t in DocType.values) t: state.slot(t).localPath!,
+      for (final t in step3DocumentTypes) t: data.slot(t).localPath!,
     };
+
     final r = await _repo.saveDocumentsAndSubmit(filePaths);
     r.fold(
-      (f) => emit(state.copyWith(busy: false, error: f.message)),
-      (_) => emit(state.copyWith(busy: false, submitted: true)),
+      (f) => emit(DriverOnboardingSubmitFailureState(
+        errorMessage: f.message,
+        data: data,
+      )),
+      (stepResponse) => emit(DriverOnboardingSubmitSuccessState(
+        response: stepResponse,
+      )),
     );
-  }
-
-  void _setSlot(DocType type, DocSlot slot) {
-    final docs = Map<DocType, DocSlot>.from(state.docs)..[type] = slot;
-    emit(state.copyWith(docs: docs));
   }
 }
