@@ -99,6 +99,11 @@ class _SetupViewState extends State<_SetupView> {
             backgroundColor: AppColors.surface,
             elevation: 0,
             automaticallyImplyLeading: false,
+            leading: IconButton(
+              tooltip: 'تسجيل الخروج والعودة لتسجيل الدخول',
+              icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
+              onPressed: () => context.read<AuthCubit>().logout(),
+            ),
             title: Text(
               'أكمل بياناتك',
               style: TextStyle(
@@ -110,8 +115,7 @@ class _SetupViewState extends State<_SetupView> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
-                //context.read<AuthCubit>().logout(),
+                onPressed: () => context.read<AuthCubit>().logout(),
                 child: const Text('خروج'),
               ),
             ],

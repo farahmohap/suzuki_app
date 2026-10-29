@@ -8,10 +8,9 @@ import '../models/onboarding_models.dart';
 abstract class DriverOnboardingRemoteDataSource {
   Future<void> saveStep1(PersonalInput input);
   Future<void> saveStep2(VehicleInput input);
-  Future<void> saveStep3(Map<DocType, String> fileKeys);
-  Future<void> submit();
+  Future<void> saveStep3(Map<DocType, String> filePaths);
   Future<VerificationInfo> getStatus();
-  Future<void> replaceDocument(DocType type, String fileKey);
+  Future<void> replaceDocument(DocType type, String filePath);
 }
 
 @LazySingleton(as: DriverOnboardingRemoteDataSource)
@@ -30,28 +29,30 @@ class DriverOnboardingRemoteDataSourceImpl
   }
 
   @override
-  Future<void> saveStep1(PersonalInput input) =>
-      _run(() => _dio.put(ApiEndpoints.driverStep1, data: input.toJson()));
+  Future<void> saveStep1(PersonalInput input) => _run(() async {
+        final formData = FormData.fromMap({
+          ...input.toJson(),
+          'avatar': await MultipartFile.fromFile(input.avatarPath),
+        });
+        await _dio.put(ApiEndpoints.driverStep1, data: formData);
+      });
 
   @override
   Future<void> saveStep2(VehicleInput input) =>
       _run(() => _dio.put(ApiEndpoints.driverStep2, data: input.toJson()));
 
   @override
-  Future<void> saveStep3(Map<DocType, String> fileKeys) => _run(
-        () => _dio.put(
-          ApiEndpoints.driverStep3,
-          data: {
-            'documents': [
-              for (final e in fileKeys.entries)
-                {'type': e.key.apiKey, 'file_key': e.value},
-            ],
-          },
-        ),
-      );
+  Future<void> saveStep3(Map<DocType, String> filePaths) => _run(() async {
+        final formData = FormData();
+        for (final entry in filePaths.entries) {
+          formData.files.add(MapEntry(
+            'documents[${entry.key.apiKey}]',
+            await MultipartFile.fromFile(entry.value),
+          ));
+        }
+        await _dio.put(ApiEndpoints.driverStep3, data: formData);
+      });
 
-  @override
-  Future<void> submit() => _run(() => _dio.post(ApiEndpoints.driverSubmit));
 
   @override
   Future<VerificationInfo> getStatus() => _run(() async {
@@ -60,10 +61,10 @@ class DriverOnboardingRemoteDataSourceImpl
       });
 
   @override
-  Future<void> replaceDocument(DocType type, String fileKey) => _run(
-        () => _dio.post(
-          ApiEndpoints.driverDocument(type.apiKey),
-          data: {'file_key': fileKey},
-        ),
-      );
+  Future<void> replaceDocument(DocType type, String filePath) => _run(() async {
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(filePath),
+        });
+        await _dio.post(ApiEndpoints.driverDocument(type.apiKey), data: formData);
+      });
 }

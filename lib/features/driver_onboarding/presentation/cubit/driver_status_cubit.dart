@@ -59,18 +59,13 @@ class DriverStatusCubit extends Cubit<DriverStatusState> {
   /// Re-uploads a rejected document, then reloads the status.
   Future<void> replaceDocument(DocType type, String path) async {
     emit(state.copyWith(replacing: {...state.replacing, type}, clearError: true));
-    final up = await _repo.uploadFile(path: path, kind: type.apiKey);
-    await up.fold(
+    final result = await _repo.replaceDocument(type, path);
+    await result.fold(
       (f) async => emit(state.copyWith(
         error: f.message,
         replacing: {...state.replacing}..remove(type),
       )),
-      (key) async {
-        final r = await _repo.replaceDocument(type, key);
-        r.fold(
-          (f) => emit(state.copyWith(error: f.message)),
-          (_) {},
-        );
+      (_) async {
         emit(state.copyWith(replacing: {...state.replacing}..remove(type)));
         await load();
       },

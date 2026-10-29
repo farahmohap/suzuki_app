@@ -143,32 +143,15 @@ Every endpoint in this section requires `Authorization: Bearer <access_token>` a
 
 The app's current API paths are listed below. They are relative to `/api/v1`.
 
-### Uploads and file keys
+### Image uploads
 
-The app obtains each image's `file_key` through the authenticated upload flow before referencing it in an onboarding request:
-
-1. `POST /uploads/presign` with `kind`, `content_type`, and `size`.
-2. The presign response provides `upload_url` and `file_key`.
-3. The app uploads the image bytes to `upload_url` and sends the `file_key` in the step payload after the upload succeeds.
-
-The maximum image size enforced by the app is 8 MiB. The profile photo and all eight required documents must be represented by file keys in onboarding data.
+There is no presigned upload endpoint. The app sends image files directly to the driver registration endpoints as `multipart/form-data`. Enforce the upload size limit and validate image content on the server.
 
 ### Step 1 — personal information
 
-`PUT /drivers/onboarding/step1`
+`PUT /drivers/register/step1`
 
-Request:
-
-```json
-{
-  "full_name": "Ahmed Mohamed Ali",
-  "national_id": "29801011234567",
-  "birth_date": "1998-01-01",
-  "gender": "male",
-  "avatar_key": "uploaded-profile-photo-key",
-  "district_id": 5
-}
-```
+Request (`multipart/form-data`): text fields `full_name`, `national_id`, `birth_date` (`YYYY-MM-DD`), and `gender` (`male` or `female`); file field `avatar`.
 
 Requirements:
 
@@ -176,13 +159,13 @@ Requirements:
 - `national_id`: required, exactly 14 digits, unique across drivers. Return `409 NATIONAL_ID_ALREADY_REGISTERED` for a duplicate.
 - `birth_date`: required valid date in `YYYY-MM-DD` format. The driver must be at least 18. Calculate age from this date; do not store a separate age value.
 - `gender`: required; `male` or `female`.
-- `avatar_key`: required profile photo file key.
+- `avatar`: required profile photo file.
 - `district_id`: optional. The approved design does not collect a district.
 - Do not accept or store a phone number in this payload. Use the signed-in user's phone.
 
 ### Step 2 — vehicle information
 
-`PUT /drivers/onboarding/step2`
+`PUT /drivers/register/step2`
 
 Request:
 
@@ -209,32 +192,17 @@ After steps 1 and 2 are both saved, set the driver's status to `needs_documents`
 
 ### Step 3 — required documents
 
-`PUT /drivers/onboarding/step3`
+`PUT /drivers/register/step3`
 
-The request contains all eight required file keys:
-
-```json
-{
-  "documents": [
-    { "type": "national_id_front", "file_key": "file-key-1" },
-    { "type": "national_id_back", "file_key": "file-key-2" },
-    { "type": "driving_license", "file_key": "file-key-3" },
-    { "type": "vehicle_license", "file_key": "file-key-4" },
-    { "type": "criminal_record", "file_key": "file-key-5" },
-    { "type": "vehicle_front", "file_key": "file-key-6" },
-    { "type": "vehicle_rear", "file_key": "file-key-7" },
-    { "type": "vehicle_interior", "file_key": "file-key-8" }
-  ]
-}
-```
+The app sends one `multipart/form-data` request containing all eight files. File fields are `documents[national_id_front]`, `documents[national_id_back]`, `documents[driving_license]`, `documents[vehicle_license]`, `documents[criminal_record]`, `documents[vehicle_front]`, `documents[vehicle_rear]`, and `documents[vehicle_interior]`.
 
 The accepted document types are exactly: `national_id_front`, `national_id_back`, `driving_license`, `vehicle_license`, `criminal_record`, `vehicle_front`, `vehicle_rear`, and `vehicle_interior`. National ID front and back remain separate document records.
 
-### Submit registration
+After accepting step 3, validate that steps 1 and 2 are complete, all eight required files are present, and the driver has no already-submitted active application. On success, set status to `pending_review` and record `submitted_at`. The driver cannot go online while pending review.
 
-`POST /drivers/onboarding/submit`
+### Replace a rejected document
 
-Before accepting submission, validate that steps 1 and 2 are complete, all eight required document types have uploaded file keys, and the driver has no already-submitted active application. On success, set status to `pending_review` and record `submitted_at`. The driver cannot go online while pending review.
+`POST /drivers/me/documents/{type}` accepts the replacement as a multipart file field named `file`. `{type}` must be one of the accepted document types listed above. The replacement returns the application to `pending_review` after the required rejected files have been replaced.
 
 ### Get verification status and resume point
 

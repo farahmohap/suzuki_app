@@ -15,24 +15,19 @@ import 'package:suzuki_app/features/driver_onboarding/presentation/widgets/docum
 import 'package:suzuki_app/features/profile/data/models/profile_models.dart';
 
 class DriverOnboardingScreen extends StatelessWidget {
-  const DriverOnboardingScreen({super.key, this.previewMode = false});
-
-  final bool previewMode;
+  const DriverOnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<DriverOnboardingCubit>()..init(previewMode: previewMode),
-      child: _WizardView(previewMode: previewMode),
+      create: (_) => getIt<DriverOnboardingCubit>()..init(),
+      child: const _WizardView(),
     );
   }
 }
 
 class _WizardView extends StatefulWidget {
-  const _WizardView({required this.previewMode});
-
-  final bool previewMode;
+  const _WizardView();
 
   @override
   State<_WizardView> createState() => _WizardViewState();
@@ -50,10 +45,9 @@ class _WizardViewState extends State<_WizardView> {
 
   DateTime? _birthDate;
   Gender _gender = Gender.male;
-  DistrictModel? _district;
   String? _carColor;
 
-  /// Sent to the backend as `car_color` (Arabic label).
+  /// Sent to the backend as `color` (Arabic label).
   static const _carColors = [
     'أبيض',
     'أسود',
@@ -103,7 +97,7 @@ class _WizardViewState extends State<_WizardView> {
           previous.submitted != current.submitted,
       listener: (context, state) {
         if (state.submitted) {
-          if (!widget.previewMode) context.read<AuthCubit>().refreshUser();
+          context.read<AuthCubit>().refreshUser();
         } else if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -119,72 +113,32 @@ class _WizardViewState extends State<_WizardView> {
         return Scaffold(
           backgroundColor: AppColors.surface,
           appBar: _buildAppBar(context, state),
-          body: state.submitted && widget.previewMode
-              ? _previewCompleteBody()
-              : SafeArea(
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeader(state),
-                        SizedBox(height: 20.h),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(state),
+                  SizedBox(height: 20.h),
 
-                        // Preserve values when moving back between steps.
-                        IndexedStack(
-                          index: state.step,
-                          children: [
-                            _personalSection(context, state),
-                            _vehicleSection(context, state),
-                            _documentsSection(context, state),
-                          ],
-                        ),
-                      ],
-                    ),
+                  // Preserve values when moving back between steps.
+                  IndexedStack(
+                    index: state.step,
+                    children: [
+                      _personalSection(context, state),
+                      _vehicleSection(context, state),
+                      _documentsSection(context, state),
+                    ],
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
         );
       },
-    );
-  }
-
-  Widget _previewCompleteBody() {
-    return SafeArea(
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.r),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle, size: 72.sp, color: AppColors.primary),
-              SizedBox(height: 16.h),
-              Text(
-                'اكتملت معاينة التسجيل',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.onSurface,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'لم يتم إرسال أي بيانات إلى الخادم.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 14.sp,
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -476,8 +430,6 @@ class _WizardViewState extends State<_WizardView> {
 
           _buildBirthDateField(context),
 
-          _buildDistrictField(state),
-
           SizedBox(height: 4.h),
 
           _bigButton(
@@ -493,33 +445,18 @@ class _WizardViewState extends State<_WizardView> {
 
   Future<void> _savePersonal(BuildContext context) async {
     if (!(_personalFormKey.currentState?.validate() ?? false)) return;
-    final district = _district;
     final birthDate = _birthDate;
-    if (district == null || birthDate == null) return;
-    await context.read<DriverOnboardingCubit>().savePersonal(
+    if (birthDate == null) return;
+    final cubit = context.read<DriverOnboardingCubit>();
+    await cubit.savePersonal(
       fullName: _name.text.trim(),
       nationalId: AppValidators.toAsciiDigits(_nationalId.text).trim(),
       birthDate: birthDate,
-      districtId: district.id,
       gender: _gender,
     );
-  }
-
-  Widget _buildDistrictField(OnboardingState state) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 14.h),
-      child: DropdownButtonFormField<DistrictModel>(
-        value: _district,
-        isExpanded: true,
-        decoration: _dec('المنطقة', Icons.location_on_outlined),
-        items: [
-          for (final district in state.districts)
-            DropdownMenuItem(value: district, child: Text(district.nameAr)),
-        ],
-        onChanged: (district) => setState(() => _district = district),
-        validator: (district) => district == null ? 'اختر المنطقة' : null,
-      ),
-    );
+    if (mounted && cubit.state.error == null) {
+      await context.read<AuthCubit>().refreshUser();
+    }
   }
 
   Widget _buildDriverPhoto(
@@ -673,14 +610,14 @@ class _WizardViewState extends State<_WizardView> {
   Widget _vehicleStep(BuildContext context, OnboardingState state) {
     final cubit = context.read<DriverOnboardingCubit>();
     const vehiclePhotoTypes = [
-      DocType.vanFront,
-      DocType.vanRear,
-      DocType.vanInterior,
+      DocType.vehicleFront,
+      DocType.vehicleRear,
+      DocType.vehicleInterior,
     ];
     const vehiclePhotoIcons = {
-      DocType.vanFront: Icons.directions_car,
-      DocType.vanRear: Icons.directions_car,
-      DocType.vanInterior: Icons.airline_seat_recline_normal,
+      DocType.vehicleFront: Icons.directions_car,
+      DocType.vehicleRear: Icons.directions_car,
+      DocType.vehicleInterior: Icons.airline_seat_recline_normal,
     };
 
     return Form(
@@ -763,9 +700,12 @@ class _WizardViewState extends State<_WizardView> {
         plateNumbers: AppValidators.toAsciiDigits(_plateNumbers.text).trim(),
         plateLetters: _plateLetters.text.trim(),
         model: _model.text.trim(),
-        carColor: color,
+        color: color,
       ),
     );
+    if (mounted && context.read<DriverOnboardingCubit>().state.error == null) {
+      await context.read<AuthCubit>().refreshUser();
+    }
   }
 
   Widget _buildCarColorField() {
@@ -854,14 +794,7 @@ class _WizardViewState extends State<_WizardView> {
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         maxLength: 4,
-                        validator: (value) {
-                          final digits = AppValidators.toAsciiDigits(
-                            value ?? '',
-                          ).trim();
-                          return RegExp(r'^\d{1,4}$').hasMatch(digits)
-                              ? null
-                              : 'أدخل أرقام اللوحة';
-                        },
+                        validator: AppValidators.plateNumbers,
                         style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 20.sp,
@@ -893,9 +826,13 @@ class _WizardViewState extends State<_WizardView> {
                       child: TextFormField(
                         controller: _plateLetters,
                         textAlign: TextAlign.center,
-                        maxLength: 3,
-                        validator: (value) =>
-                            AppValidators.required(value, label: 'حروف اللوحة'),
+                        maxLength: 5,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[\u0621-\u064A\s]'),
+                          ),
+                        ],
+                        validator: AppValidators.plateLetters,
                         style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 20.sp,
@@ -980,9 +917,9 @@ class _WizardViewState extends State<_WizardView> {
         ...DocType.values
             .where(
               (type) =>
-                  type != DocType.vanFront &&
-                  type != DocType.vanRear &&
-                  type != DocType.vanInterior,
+                  type != DocType.vehicleFront &&
+                  type != DocType.vehicleRear &&
+                  type != DocType.vehicleInterior,
             )
             .map(
               (type) => Padding(
@@ -1003,7 +940,7 @@ class _WizardViewState extends State<_WizardView> {
         _bigButton(
           label: 'إرسال طلب التسجيل',
           icon: Icons.rocket_launch_outlined,
-          busy: state.busy,
+          busy: state.busy || state.anyUploading,
           onPressed: () => cubit.submit(),
         ),
       ],

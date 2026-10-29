@@ -1,16 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../config/app_config.dart';
 import '../error/exceptions.dart';
 import '../session/session_events.dart';
 import '../storage/token_storage.dart';
 import 'auth_interceptor.dart';
-import 'logging_interceptor.dart';
 
 /// Builds THE app Dio (registered once in DI — see core/di/injection.dart).
 ///
-/// Interceptors: [AuthInterceptor] (+ [LoggingInterceptor] in debug).
+/// Interceptors: [AuthInterceptor] (+ [PrettyDioLogger] in debug).
 Dio buildApiDio({
   required TokenStorage tokens,
   required SessionEvents session,
@@ -29,7 +29,8 @@ Dio buildApiDio({
   );
 
   final api = Dio(options);
-  final refreshDio = Dio(options.copyWith()); // no interceptors on purpose
+  // Keep auth interception off to avoid refresh loops; debug logging is added below.
+  final refreshDio = Dio(options.copyWith());
 
   api.interceptors.add(
     AuthInterceptor(
@@ -39,9 +40,26 @@ Dio buildApiDio({
       session: session,
     ),
   );
-  if (kDebugMode) api.interceptors.add(LoggingInterceptor());
+  if (kDebugMode) {
+    api.interceptors.add(_prettyApiLogger());
+    refreshDio.interceptors.add(_prettyApiLogger());
+  }
   return api;
 }
+
+PrettyDioLogger _prettyApiLogger() => PrettyDioLogger(
+      request: true,
+      requestHeader: false,
+      requestBody: false,
+      responseHeader: true,
+      // PrettyDioLogger prints bodies for both onResponse (2xx) and onError
+      // (non-2xx), so backend error envelopes are visible as well.
+      responseBody: true,
+      error: true,
+      compact: true,
+      maxWidth: 120,
+      logPrint: (object) => debugPrint(object.toString()),
+    );
 
 /// Maps [DioException] to a typed [AppException].
 ///

@@ -22,30 +22,12 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthModel? _user;
   bool _resolved = false;
-  bool _previewDriverSession = false;
 
   /// Signed-in user (used by the router redirect). Null when signed out.
   AuthModel? get currentUser => _user;
 
   /// True once [checkAuthStatus] finished at least once.
   bool get isResolved => _resolved;
-
-  /// True for the temporary no-API driver onboarding review flow.
-  bool get isPreviewDriverSession => _previewDriverSession;
-
-  /// Creates an in-memory driver session for reviewing onboarding screens.
-  /// No tokens or user data are sent to or saved from the backend.
-  void beginDriverPreviewSession({required String phone}) {
-    _resolved = true;
-    _previewDriverSession = true;
-    _user = AuthModel(
-      userId: 'driver-preview',
-      role: UserRole.driver,
-      phone: phone,
-      driverStatus: VerificationStatus.none,
-    );
-    emit(AuthAuthenticated(_user!));
-  }
 
   /// Called by the splash screen.
   Future<void> checkAuthStatus() async {
@@ -120,17 +102,12 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
-    if (_previewDriverSession) {
-      _setSignedOut();
-      return;
-    }
     await _repo.logout();
     _setSignedOut();
   }
 
   void _setSignedOut() {
     _user = null;
-    _previewDriverSession = false;
     _resolved = true;
     emit(const AuthUnauthenticated());
   }

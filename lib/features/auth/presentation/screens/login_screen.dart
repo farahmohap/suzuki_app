@@ -38,21 +38,19 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     final phone = AppValidators.normalizePhone(_phoneController.text)!;
 
-    if (!_isDriver) {
-      setState(() => _sending = true);
-      final message = await context.read<AuthCubit>().requestOtp(
-        phone: phone,
-        role: UserRole.passenger,
-      );
-      if (!mounted) return;
-      setState(() => _sending = false);
+    setState(() => _sending = true);
+    final message = await context.read<AuthCubit>().requestOtp(
+      phone: phone,
+      role: _isDriver ? UserRole.driver : UserRole.passenger,
+    );
+    if (!mounted) return;
+    setState(() => _sending = false);
 
-      if (message != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-        return;
-      }
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
     }
 
     context.pushNamed(

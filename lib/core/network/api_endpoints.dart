@@ -11,13 +11,12 @@ abstract final class ApiEndpoints {
   // ── Profile & shared (phase 2) ─────────────────────────────────────────────
   static const String me = '/users/me';
   static const String districts = '/districts';
-  static const String presignUpload = '/uploads/presign';
 
   // ── Driver onboarding (phase 2) ────────────────────────────────────────────
   static const String driverStep1 = '/drivers/register/step1';
   static const String driverStep2 = '/drivers/register/step2';
   static const String driverStep3 = '/drivers/register/step3';
-  static const String driverSubmit = '/drivers/register/submit';
+
   static const String driverVerificationStatus = '/drivers/me/status';
   static String driverDocument(String type) => '/drivers/me/documents/$type';
 

@@ -18,10 +18,21 @@ enum VerificationStatus {
   /// Not a driver, or onboarding not started.
   none,
   draft,
+  needsDocuments,
   pending,
   approved,
   rejected,
   suspended;
+
+  String get apiValue => switch (this) {
+        VerificationStatus.none => 'needs_profile',
+        VerificationStatus.draft => 'draft',
+        VerificationStatus.needsDocuments => 'needs_documents',
+        VerificationStatus.pending => 'pending_review',
+        VerificationStatus.approved => 'approved',
+        VerificationStatus.rejected => 'rejected',
+        VerificationStatus.suspended => 'suspended',
+      };
 
   static VerificationStatus fromString(String? s) {
     // The API's account lifecycle names differ from the driver's review
@@ -32,6 +43,8 @@ enum VerificationStatus {
         return VerificationStatus.none;
       case 'draft':
         return VerificationStatus.draft;
+      case 'needs_documents':
+        return VerificationStatus.needsDocuments;
       case 'pending_review':
       case 'pending':
         return VerificationStatus.pending;
@@ -102,7 +115,7 @@ class AuthModel extends Equatable {
         'full_name': fullName,
         'avatar_url': avatarUrl,
         'profile_complete': profileComplete,
-        'driver_status': driverStatus.name,
+        'driver_status': driverStatus.apiValue,
       };
 
   AuthModel copyWith({

@@ -168,6 +168,7 @@ class _StatusView extends StatelessWidget {
         ];
       case VerificationStatus.none:
       case VerificationStatus.draft:
+      case VerificationStatus.needsDocuments:
         return const [
           _Message(
             icon: Icons.edit_note,

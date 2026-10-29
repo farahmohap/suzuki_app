@@ -79,10 +79,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       _busy = true;
       _error = null;
     });
-    final auth = context.read<AuthCubit>();
-    final message = widget.isDriver
-        ? _beginDriverPreview(auth)
-        : await auth.verifyOtp(phone: widget.phoneNumber, code: code);
+    final message = await context.read<AuthCubit>().verifyOtp(
+          phone: widget.phoneNumber,
+          code: code,
+        );
     if (!mounted) return;
     // On success the router redirects away from this screen.
     setState(() {
@@ -92,19 +92,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (message != null) _controller.clear();
   }
 
-  String? _beginDriverPreview(AuthCubit auth) {
-    auth.beginDriverPreviewSession(phone: widget.phoneNumber);
-    return null;
-  }
-
   Future<void> _resend() async {
     if (_secondsLeft > 0 || _busy) return;
-    final message = widget.isDriver
-        ? null
-        : await context.read<AuthCubit>().requestOtp(
-            phone: widget.phoneNumber,
-            role: UserRole.passenger,
-          );
+    final message = await context.read<AuthCubit>().requestOtp(
+      phone: widget.phoneNumber,
+      role: widget.isDriver ? UserRole.driver : UserRole.passenger,
+    );
     if (!mounted) return;
     if (message == null) {
       _startTimer();
@@ -161,17 +154,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 color: AppColors.grey600,
               ),
             ),
-            if (widget.isDriver) ...[
-              SizedBox(height: 8.h),
-              Text(
-                'وضع معاينة مؤقت: أدخل أي ٦ أرقام للمتابعة.',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 12.sp,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
             SizedBox(height: 28.h),
             // One real field (autofill / paste friendly) + 6 display boxes.
             GestureDetector(

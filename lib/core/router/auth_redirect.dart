@@ -18,9 +18,7 @@ String? resolveRedirect({
   if (!resolved) return location == splash ? null : splash;
 
   if (user == null) {
-    return (location == login ||
-            location == otp ||
-            location == register)
+    return (location == login || location == otp)
         ? null
         : login;
   }
@@ -38,7 +36,8 @@ String? resolveRedirect({
     // Rejected/pending drivers must not reopen the wizard.
     if (location.startsWith('/driver/onboarding') &&
         user.driverStatus != VerificationStatus.none &&
-        user.driverStatus != VerificationStatus.draft) {
+        user.driverStatus != VerificationStatus.draft &&
+        user.driverStatus != VerificationStatus.needsDocuments) {
       return home;
     }
     return null;
@@ -59,6 +58,7 @@ String homeFor(AuthModel user) {
         return '/driver/dashboard';
       case VerificationStatus.none:
       case VerificationStatus.draft:
+      case VerificationStatus.needsDocuments:
         return '/driver/onboarding';
       case VerificationStatus.pending:
       case VerificationStatus.rejected:

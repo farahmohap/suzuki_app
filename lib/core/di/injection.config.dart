@@ -49,7 +49,6 @@ import '../../features/profile/data/repositories/profile_repository.dart'
 import '../../features/profile/presentation/cubit/profile_cubit.dart' as _i922;
 import '../network/network_info.dart' as _i600;
 import '../network/socket_service.dart' as _i601;
-import '../network/upload_service.dart' as _i602;
 import '../session/session_events.dart' as _i603;
 import '../storage/token_storage.dart' as _i604;
 import 'injection.dart' as _i100;
@@ -86,9 +85,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i600.NetworkInfo>(() => const _i600.NetworkInfoImpl());
     gh.lazySingleton<_i601.SocketService>(
       () => _i601.SocketService(gh<_i604.TokenStorage>()),
-    );
-    gh.lazySingleton<_i602.UploadService>(
-      () => _i602.UploadService(gh<_i361.Dio>()),
     );
 
     // Auth
@@ -137,15 +133,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i911.DriverOnboardingRepository>(
       () => _i911.DriverOnboardingRepositoryImpl(
         gh<_i910.DriverOnboardingRemoteDataSource>(),
-        gh<_i602.UploadService>(),
         gh<_i600.NetworkInfo>(),
       ),
     );
     gh.factory<_i912.DriverOnboardingCubit>(
-      () => _i912.DriverOnboardingCubit(
-        gh<_i911.DriverOnboardingRepository>(),
-        gh<_i921.ProfileRepository>(),
-      ),
+      () => _i912.DriverOnboardingCubit(gh<_i911.DriverOnboardingRepository>()),
     );
     gh.factory<_i913.DriverStatusCubit>(
       () => _i913.DriverStatusCubit(gh<_i911.DriverOnboardingRepository>()),

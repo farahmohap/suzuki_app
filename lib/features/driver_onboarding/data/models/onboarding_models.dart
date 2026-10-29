@@ -11,9 +11,9 @@ enum DocType {
   drivingLicense('driving_license', 'رخصة القيادة (مهنية / أجرة)'),
   vehicleLicense('vehicle_license', 'رخصة السيارة'),
   criminalRecord('criminal_record', 'الفيش والتشبيه'),
-  vanFront('van_front', 'صورة السوزوكي - من الأمام'),
-  vanRear('van_rear', 'صورة السوزوكي - من الخلف'),
-  vanInterior('van_interior', 'صورة السوزوكي - من الداخل');
+  vehicleFront('vehicle_front', 'صورة السوزوكي - من الأمام'),
+  vehicleRear('vehicle_rear', 'صورة السوزوكي - من الخلف'),
+  vehicleInterior('vehicle_interior', 'صورة السوزوكي - من الداخل');
 
   const DocType(this.apiKey, this.labelAr);
 
@@ -33,31 +33,27 @@ class PersonalInput extends Equatable {
     required this.fullName,
     required this.nationalId,
     required this.birthDate,
-    required this.districtId,
     required this.gender,
-    this.avatarKey,
+    required this.avatarPath,
   });
 
   final String fullName;
   final String nationalId;
   final DateTime birthDate;
-  final String districtId;
   final Gender gender;
-  final String? avatarKey;
+  final String avatarPath;
 
   Map<String, dynamic> toJson() => {
         'full_name': fullName,
         'national_id': nationalId,
         'birth_date':
             '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
-        'district_id': districtId,
         'gender': gender.apiValue,
-        if (avatarKey != null) 'avatar_key': avatarKey,
       };
 
   @override
   List<Object?> get props =>
-      [fullName, nationalId, birthDate, districtId, gender, avatarKey];
+      [fullName, nationalId, birthDate, gender, avatarPath];
 }
 
 class VehicleInput extends Equatable {
@@ -65,7 +61,7 @@ class VehicleInput extends Equatable {
     required this.plateNumbers,
     required this.plateLetters,
     required this.model,
-    required this.carColor,
+    required this.color,
   });
 
   /// e.g. `2845`
@@ -74,18 +70,18 @@ class VehicleInput extends Equatable {
   /// e.g. `ق ن ص`
   final String plateLetters;
   final String model;
-  final String carColor;
+  final String color;
 
   Map<String, dynamic> toJson() => {
         'plate_numbers': plateNumbers,
         'plate_letters': plateLetters,
         'model': model,
-        'car_color': carColor,
+        'color': color,
       };
 
   @override
   List<Object?> get props =>
-      [plateNumbers, plateLetters, model, carColor];
+      [plateNumbers, plateLetters, model, color];
 }
 
 /// Review state of one uploaded document (from `GET /drivers/me/status`).
@@ -113,6 +109,7 @@ class VerificationInfo extends Equatable {
   const VerificationInfo({
     required this.status,
     this.onboardingStep = 1,
+    this.completedSteps = const [],
     this.rejectionReason,
     this.documents = const [],
   });
@@ -121,8 +118,11 @@ class VerificationInfo extends Equatable {
 
   /// Next step to fill, 1..3 (resume point).
   final int onboardingStep;
+  final List<int> completedSteps;
   final String? rejectionReason;
   final List<DocumentReview> documents;
+
+  int get nextStepIndex => (onboardingStep - 1).clamp(0, 2);
 
   factory VerificationInfo.fromJson(Map<String, dynamic> json) {
     final b = unwrapData(json);
@@ -134,19 +134,39 @@ class VerificationInfo extends Equatable {
         if (type == null) continue;
         docs.add(DocumentReview(
           type: type,
-          status: d['status'] as String? ?? 'uploaded',
+          status: d['status'] as String? ?? 'missing',
           rejectReason: (d['reject_reason'] ?? d['reason']) as String?,
         ));
       }
     }
+    final status = VerificationStatus.fromString(
+      (b['status'] ?? b['verification_status']) as String?,
+    );
+    final rawCompletedSteps = b['completed_steps'];
+    final completedSteps = rawCompletedSteps is List
+        ? rawCompletedSteps.whereType<num>().map((step) => step.toInt()).toList()
+        : const <int>[];
+    final onboardingStep = rawCompletedSteps is List
+        ? (completedSteps.contains(1)
+            ? (completedSteps.contains(2) ? 3 : 2)
+            : 1)
+        : (b['onboarding_step'] as num?)?.toInt() ??
+            (status == VerificationStatus.needsDocuments ? 3 : 1);
     return VerificationInfo(
-      status: VerificationStatus.fromString(b['verification_status'] as String?),
-      onboardingStep: (b['onboarding_step'] as num?)?.toInt() ?? 1,
+      status: status,
+      onboardingStep: onboardingStep,
+      completedSteps: completedSteps,
       rejectionReason: b['rejection_reason'] as String?,
       documents: docs,
     );
   }
 
   @override
-  List<Object?> get props => [status, onboardingStep, rejectionReason, documents];
+  List<Object?> get props => [
+        status,
+        onboardingStep,
+        completedSteps,
+        rejectionReason,
+        documents,
+      ];
 }
