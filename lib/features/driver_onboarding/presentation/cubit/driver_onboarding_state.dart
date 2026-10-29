@@ -20,6 +20,9 @@ class DocSlot extends Equatable {
   final String? localPath;
   final double progress;
 
+  bool get isUploaded =>
+      status == DocUploadStatus.uploaded && localPath != null;
+
   DocSlot copyWith({
     DocUploadStatus? status,
     String? localPath,
@@ -76,7 +79,7 @@ class DriverOnboardingLoadedState extends DriverOnboardingState {
   DocSlot slot(DocType t) => docs[t] ?? const DocSlot();
 
   bool get allDocsUploaded =>
-      DocType.values.every((t) => slot(t).status == DocUploadStatus.uploaded);
+      DocType.values.every((t) => slot(t).isUploaded);
 
   bool get anyUploading =>
       docs.values.any((d) => d.status == DocUploadStatus.uploading);
@@ -120,10 +123,14 @@ class DriverOnboardingSavePersonalLoadingState extends DriverOnboardingState {
 
 class DriverOnboardingSavePersonalSuccessState extends DriverOnboardingState {
   final DriverOnboardingLoadedState data;
-  const DriverOnboardingSavePersonalSuccessState({required this.data});
+  final DriverStepResponse response;
+  const DriverOnboardingSavePersonalSuccessState({
+    required this.data,
+    required this.response,
+  });
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [data, response];
 }
 
 class DriverOnboardingSavePersonalFailureState extends DriverOnboardingState {
@@ -152,10 +159,14 @@ class DriverOnboardingSaveVehicleLoadingState extends DriverOnboardingState {
 
 class DriverOnboardingSaveVehicleSuccessState extends DriverOnboardingState {
   final DriverOnboardingLoadedState data;
-  const DriverOnboardingSaveVehicleSuccessState({required this.data});
+  final DriverStepResponse response;
+  const DriverOnboardingSaveVehicleSuccessState({
+    required this.data,
+    required this.response,
+  });
 
   @override
-  List<Object?> get props => [data];
+  List<Object?> get props => [data, response];
 }
 
 class DriverOnboardingSaveVehicleFailureState extends DriverOnboardingState {
@@ -183,7 +194,11 @@ class DriverOnboardingSubmitLoadingState extends DriverOnboardingState {
 }
 
 class DriverOnboardingSubmitSuccessState extends DriverOnboardingState {
-  const DriverOnboardingSubmitSuccessState();
+  final DriverStepResponse? response;
+  const DriverOnboardingSubmitSuccessState({this.response});
+
+  @override
+  List<Object?> get props => [response];
 }
 
 class DriverOnboardingSubmitFailureState extends DriverOnboardingState {

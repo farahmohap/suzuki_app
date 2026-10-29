@@ -16,10 +16,10 @@ class DistrictModel extends Equatable {
   final String nameAr;
   final String? code;
 
-  factory DistrictModel.fromJson(Map<String, dynamic> json) => DistrictModel(
+  factory DistrictModel.fromJson(Map<dynamic, dynamic> json) => DistrictModel(
         id: json['id'].toString(),
         nameAr: (json['name_ar'] ?? json['name'] ?? '').toString(),
-        code: json['code'] as String?,
+        code: json['code']?.toString(),
       );
 
   @override

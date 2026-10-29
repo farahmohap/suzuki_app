@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:suzuki_app/core/constants/app_colors.dart';
 import 'package:suzuki_app/core/di/injection.dart';
+import 'package:suzuki_app/core/router/app_routes.dart';
 import 'package:suzuki_app/core/utils/validators.dart';
 import 'package:suzuki_app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:suzuki_app/features/driver_onboarding/data/models/onboarding_models.dart';
@@ -126,6 +128,7 @@ class _WizardViewState extends State<_WizardView> {
       listener: (context, state) {
         if (state is DriverOnboardingSubmitSuccessState) {
           context.read<AuthCubit>().refreshUser();
+          context.go(AppRoute.driverStatus.fullPath);
         }
         final error = _errorOf(state);
         if (error != null) {
@@ -529,9 +532,29 @@ class _WizardViewState extends State<_WizardView> {
   Future<void> _savePersonal(BuildContext context) async {
     if (!(_personalFormKey.currentState?.validate() ?? false)) return;
     final birthDate = _birthDate;
-    if (birthDate == null) return;
+    if (birthDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تاريخ الميلاد مطلوب',
+            style: TextStyle(fontFamily: 'Cairo'),
+          ),
+        ),
+      );
+      return;
+    }
     final district = _selectedDistrict;
-    if (district == null) return;
+    if (district == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'اختر المنطقة',
+            style: TextStyle(fontFamily: 'Cairo'),
+          ),
+        ),
+      );
+      return;
+    }
 
     final cubit = context.read<DriverOnboardingCubit>();
     await cubit.savePersonal(
@@ -539,7 +562,7 @@ class _WizardViewState extends State<_WizardView> {
       nationalId: AppValidators.toAsciiDigits(_nationalId.text).trim(),
       birthDate: birthDate,
       gender: _gender,
-      districtId: int.parse(district.id),
+      districtId: int.tryParse(district.id) ?? 1,
     );
   }
 
@@ -810,7 +833,17 @@ class _WizardViewState extends State<_WizardView> {
   Future<void> _saveVehicle(BuildContext context) async {
     if (!(_vehicleFormKey.currentState?.validate() ?? false)) return;
     final color = _carColor;
-    if (color == null) return;
+    if (color == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'اختر لون السيارة',
+            style: TextStyle(fontFamily: 'Cairo'),
+          ),
+        ),
+      );
+      return;
+    }
     await context.read<DriverOnboardingCubit>().saveVehicle(
       VehicleInput(
         plateNumbers: AppValidators.toAsciiDigits(_plateNumbers.text).trim(),

@@ -51,7 +51,7 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     final statusResult = results[1];
 
     late final List<DistrictModel> districts;
-    late final int step;
+    late final VerificationInfo statusInfo;
 
     // Districts
     final dFold = districtsResult.fold(
@@ -73,15 +73,28 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
         return false;
       },
       (info) {
-        step = (info as VerificationInfo).nextStepIndex;
+        statusInfo = info as VerificationInfo;
         return true;
       },
     );
     if (!sFold) return;
 
+    // Prepopulate any already-uploaded documents reported by backend
+    final Map<DocType, DocSlot> docs = {};
+    for (final doc in statusInfo.documents) {
+      if (doc.status == 'uploaded' || doc.status == 'approved') {
+        docs[doc.type] = const DocSlot(
+          status: DocUploadStatus.uploaded,
+          localPath: 'existing',
+          progress: 1,
+        );
+      }
+    }
+
     emit(DriverOnboardingLoadedState(
-      step: step,
+      step: statusInfo.nextStepIndex,
       districts: districts,
+      docs: docs,
     ));
   }
 
@@ -99,9 +112,16 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     emit(data.copyWith(avatarPath: path));
   }
 
+  void _setSlot(DocType type, DocSlot slot) {
+    final data = _loaded;
+    if (data == null) return;
+    final docs = Map<DocType, DocSlot>.from(data.docs)..[type] = slot;
+    emit(data.copyWith(docs: docs));
+  }
+
   // ── Step 1 ──────────────────────────────────────────────────────────────
 
-  /// Sends personal details + avatar as multipart form data.
+  /// Sends Step 1 personal details and avatar file directly via multipart form data.
   Future<void> savePersonal({
     required String fullName,
     required String nationalId,
@@ -113,7 +133,7 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     if (data == null) return;
 
     final path = data.avatarPath;
-    if (path == null) {
+    if (path == null || path.isEmpty) {
       emit(DriverOnboardingSavePersonalFailureState(
         errorMessage: 'الصورة الشخصية مطلوبة',
         data: data,
@@ -137,9 +157,15 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
         errorMessage: f.message,
         data: data,
       )),
-      (_) {
-        final next = data.copyWith(step: 1);
-        emit(DriverOnboardingSavePersonalSuccessState(data: next));
+      (stepResponse) {
+        final nextStep = stepResponse.nextStepIndex > 0
+            ? stepResponse.nextStepIndex
+            : 1;
+        final next = data.copyWith(step: nextStep);
+        emit(DriverOnboardingSavePersonalSuccessState(
+          data: next,
+          response: stepResponse,
+        ));
         emit(next);
       },
     );
@@ -160,9 +186,15 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
         errorMessage: f.message,
         data: data,
       )),
-      (_) {
-        final next = data.copyWith(step: 2);
-        emit(DriverOnboardingSaveVehicleSuccessState(data: next));
+      (stepResponse) {
+        final nextStep = stepResponse.nextStepIndex > 1
+            ? stepResponse.nextStepIndex
+            : 2;
+        final next = data.copyWith(step: nextStep);
+        emit(DriverOnboardingSaveVehicleSuccessState(
+          data: next,
+          response: stepResponse,
+        ));
         emit(next);
       },
     );
@@ -170,18 +202,19 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
 
   // ── Step 3 ──────────────────────────────────────────────────────────────
 
-  /// Keeps selected files locally; they are sent together on submit.
-  Future<void> uploadDocument(DocType type, String path) async {
+  /// Records picked document locally; files are sent directly upon submit.
+  void uploadDocument(DocType type, String path) {
     final data = _loaded;
     if (data == null) return;
 
-    final docs = Map<DocType, DocSlot>.from(data.docs)
-      ..[type] = DocSlot(
+    _setSlot(
+      type,
+      DocSlot(
         status: DocUploadStatus.uploaded,
         localPath: path,
         progress: 1,
-      );
-    emit(data.copyWith(docs: docs));
+      ),
+    );
   }
 
   void removeDocument(DocType type) {
@@ -192,14 +225,17 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
     emit(data.copyWith(docs: docs));
   }
 
-  /// Saves step 3 and submits the application.
+  /// Sends step 3 documents directly and submits the application.
   Future<void> submit() async {
     final data = _loaded;
     if (data == null) return;
 
-    if (!data.allDocsUploaded) {
+    final missing =
+        DocType.values.where((t) => !data.slot(t).isUploaded).toList();
+    if (missing.isNotEmpty) {
       emit(DriverOnboardingSubmitFailureState(
-        errorMessage: 'ارفع كل المستندات والصور أولًا',
+        errorMessage:
+            'ارفع كل المستندات والصور المطلوبة أولًا (${missing.map((e) => e.labelAr).join("، ")})',
         data: data,
       ));
       return;
@@ -217,7 +253,9 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
         errorMessage: f.message,
         data: data,
       )),
-      (_) => emit(const DriverOnboardingSubmitSuccessState()),
+      (stepResponse) => emit(DriverOnboardingSubmitSuccessState(
+        response: stepResponse,
+      )),
     );
   }
 }

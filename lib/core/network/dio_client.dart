@@ -48,18 +48,18 @@ Dio buildApiDio({
 }
 
 PrettyDioLogger _prettyApiLogger() => PrettyDioLogger(
-      request: true,
-      requestHeader: false,
-      requestBody: false,
-      responseHeader: true,
-      // PrettyDioLogger prints bodies for both onResponse (2xx) and onError
-      // (non-2xx), so backend error envelopes are visible as well.
-      responseBody: true,
-      error: true,
-      compact: true,
-      maxWidth: 120,
-      logPrint: (object) => debugPrint(object.toString()),
-    );
+  request: true,
+  requestHeader: true,
+  requestBody: true,
+  responseHeader: true,
+  // PrettyDioLogger prints bodies for both onResponse (2xx) and onError
+  // (non-2xx), so backend error envelopes are visible as well.
+  responseBody: true,
+  error: true,
+  compact: true,
+  maxWidth: 120,
+  logPrint: (object) => debugPrint(object.toString()),
+);
 
 /// Maps [DioException] to a typed [AppException].
 ///
@@ -82,10 +82,7 @@ extension DioExceptionMapper on DioException {
       case DioExceptionType.badResponse:
         return _fromResponse();
       default:
-        return ServerException(
-          message: 'خطأ غير متوقع',
-          code: 'DIO_UNKNOWN',
-        );
+        return ServerException(message: 'خطأ غير متوقع', code: 'DIO_UNKNOWN');
     }
   }
 
@@ -102,9 +99,21 @@ extension DioExceptionMapper on DioException {
       if (err is Map) {
         code = err['code']?.toString();
         message = (err['message_ar'] ?? err['message'])?.toString();
-        final f = err['fields'];
+        final f = err['fields'] ?? err['details'];
         if (f is Map) {
-          fields = f.map((k, v) => MapEntry(k.toString(), v.toString()));
+          fields = f.map((k, v) {
+            if (v is List && v.isNotEmpty) {
+              return MapEntry(k.toString(), v.first.toString());
+            }
+            return MapEntry(k.toString(), v.toString());
+          });
+          if (fields != null &&
+              fields.isNotEmpty &&
+              (message == null ||
+                  message == 'The given data was invalid.' ||
+                  message.isEmpty)) {
+            message = fields.values.first;
+          }
         }
       } else {
         message = (data['message'] ?? data['error'])?.toString();
