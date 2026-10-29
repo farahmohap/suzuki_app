@@ -14,10 +14,10 @@ abstract final class ApiEndpoints {
   static const String presignUpload = '/uploads/presign';
 
   // ── Driver onboarding (phase 2) ────────────────────────────────────────────
-  static const String driverStep1 = '/drivers/onboarding/step1';
-  static const String driverStep2 = '/drivers/onboarding/step2';
-  static const String driverStep3 = '/drivers/onboarding/step3';
-  static const String driverSubmit = '/drivers/onboarding/submit';
+  static const String driverStep1 = '/drivers/register/step1';
+  static const String driverStep2 = '/drivers/register/step2';
+  static const String driverStep3 = '/drivers/register/step3';
+  static const String driverSubmit = '/drivers/register/submit';
   static const String driverVerificationStatus = '/drivers/me/status';
   static String driverDocument(String type) => '/drivers/me/documents/$type';
 
