@@ -46,6 +46,7 @@ class _WizardViewState extends State<_WizardView> {
   DateTime? _birthDate;
   Gender _gender = Gender.male;
   String? _carColor;
+  DistrictModel? _selectedDistrict;
 
   /// Sent to the backend as `color` (Arabic label).
   static const _carColors = [
@@ -89,20 +90,49 @@ class _WizardViewState extends State<_WizardView> {
     super.dispose();
   }
 
+  // ---------------------------------------------------------------------------
+  // Helpers to extract loaded data and busy/error from any state
+  // ---------------------------------------------------------------------------
+
+  DriverOnboardingLoadedState? _dataOf(DriverOnboardingState s) {
+    if (s is DriverOnboardingLoadedState) return s;
+    if (s is DriverOnboardingSavePersonalLoadingState) return s.data;
+    if (s is DriverOnboardingSavePersonalSuccessState) return s.data;
+    if (s is DriverOnboardingSavePersonalFailureState) return s.data;
+    if (s is DriverOnboardingSaveVehicleLoadingState) return s.data;
+    if (s is DriverOnboardingSaveVehicleSuccessState) return s.data;
+    if (s is DriverOnboardingSaveVehicleFailureState) return s.data;
+    if (s is DriverOnboardingSubmitLoadingState) return s.data;
+    if (s is DriverOnboardingSubmitFailureState) return s.data;
+    return null;
+  }
+
+  bool _isBusy(DriverOnboardingState s) =>
+      s is DriverOnboardingSavePersonalLoadingState ||
+      s is DriverOnboardingSaveVehicleLoadingState ||
+      s is DriverOnboardingSubmitLoadingState;
+
+  String? _errorOf(DriverOnboardingState s) {
+    if (s is DriverOnboardingSavePersonalFailureState) return s.errorMessage;
+    if (s is DriverOnboardingSaveVehicleFailureState) return s.errorMessage;
+    if (s is DriverOnboardingSubmitFailureState) return s.errorMessage;
+    if (s is DriverOnboardingLoadFailureState) return s.errorMessage;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<DriverOnboardingCubit, OnboardingState>(
-      listenWhen: (previous, current) =>
-          previous.error != current.error ||
-          previous.submitted != current.submitted,
+    return BlocConsumer<DriverOnboardingCubit, DriverOnboardingState>(
       listener: (context, state) {
-        if (state.submitted) {
+        if (state is DriverOnboardingSubmitSuccessState) {
           context.read<AuthCubit>().refreshUser();
-        } else if (state.error != null) {
+        }
+        final error = _errorOf(state);
+        if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                state.error!,
+                error,
                 style: const TextStyle(fontFamily: 'Cairo'),
               ),
             ),
@@ -110,9 +140,52 @@ class _WizardViewState extends State<_WizardView> {
         }
       },
       builder: (context, state) {
+        // Loading / initial
+        if (state is DriverOnboardingInitialState ||
+            state is DriverOnboardingLoadingState) {
+          return Scaffold(
+            backgroundColor: AppColors.surface,
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Fatal load failure (districts or status)
+        if (state is DriverOnboardingLoadFailureState) {
+          return Scaffold(
+            backgroundColor: AppColors.surface,
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    state.errorMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 14.sp,
+                      color: AppColors.error,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<DriverOnboardingCubit>().init(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final data = _dataOf(state);
+        if (data == null) return const SizedBox.shrink();
+
+        final busy = _isBusy(state);
+
         return Scaffold(
           backgroundColor: AppColors.surface,
-          appBar: _buildAppBar(context, state),
+          appBar: _buildAppBar(context, data),
           body: SafeArea(
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -121,16 +194,16 @@ class _WizardViewState extends State<_WizardView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(state),
+                  _buildHeader(data),
                   SizedBox(height: 20.h),
 
                   // Preserve values when moving back between steps.
                   IndexedStack(
-                    index: state.step,
+                    index: data.step,
                     children: [
-                      _personalSection(context, state),
-                      _vehicleSection(context, state),
-                      _documentsSection(context, state),
+                      _personalSection(context, data, busy),
+                      _vehicleSection(context, data, busy),
+                      _documentsSection(context, data, busy),
                     ],
                   ),
                 ],
@@ -144,12 +217,12 @@ class _WizardViewState extends State<_WizardView> {
 
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
-    OnboardingState state,
+    DriverOnboardingLoadedState data,
   ) {
     return AppBar(
       backgroundColor: AppColors.surface,
       elevation: 0,
-      leading: state.step > 0
+      leading: data.step > 0
           ? IconButton(
               icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
               onPressed: context.read<DriverOnboardingCubit>().back,
@@ -184,8 +257,8 @@ class _WizardViewState extends State<_WizardView> {
     );
   }
 
-  Widget _buildHeader(OnboardingState state) {
-    final progress = (state.step + 1) / 3;
+  Widget _buildHeader(DriverOnboardingLoadedState data) {
+    final progress = (data.step + 1) / 3;
 
     return Column(
       children: [
@@ -247,7 +320,7 @@ class _WizardViewState extends State<_WizardView> {
 
         SizedBox(height: 20.h),
 
-        _buildProgressIndicator(state.step, progress),
+        _buildProgressIndicator(data.step, progress),
       ],
     );
   }
@@ -357,23 +430,31 @@ class _WizardViewState extends State<_WizardView> {
   // STEP 1
   // ---------------------------------------------------------------------------
 
-  Widget _personalSection(BuildContext context, OnboardingState state) {
+  Widget _personalSection(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     return _sectionCard(
       stepText: 'خطوة ١ من ٣',
       title: _titles[0],
       subtitle: _subtitles[0],
       icon: _icons[0],
-      child: _personalStep(context, state),
+      child: _personalStep(context, data, busy),
     );
   }
 
-  Widget _personalStep(BuildContext context, OnboardingState state) {
+  Widget _personalStep(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     return Form(
       key: _personalFormKey,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       child: Column(
         children: [
-          _buildDriverPhoto(context, state),
+          _buildDriverPhoto(context, data),
           SizedBox(height: 20.h),
 
           _field(
@@ -430,12 +511,14 @@ class _WizardViewState extends State<_WizardView> {
 
           _buildBirthDateField(context),
 
+          _buildDistrictField(data.districts),
+
           SizedBox(height: 4.h),
 
           _bigButton(
             label: 'التالي',
             icon: Icons.arrow_forward,
-            busy: state.busy,
+            busy: busy,
             onPressed: () => _savePersonal(context),
           ),
         ],
@@ -447,22 +530,22 @@ class _WizardViewState extends State<_WizardView> {
     if (!(_personalFormKey.currentState?.validate() ?? false)) return;
     final birthDate = _birthDate;
     if (birthDate == null) return;
+    final district = _selectedDistrict;
+    if (district == null) return;
+
     final cubit = context.read<DriverOnboardingCubit>();
     await cubit.savePersonal(
       fullName: _name.text.trim(),
       nationalId: AppValidators.toAsciiDigits(_nationalId.text).trim(),
       birthDate: birthDate,
       gender: _gender,
+      districtId: int.parse(district.id),
     );
-    if (mounted && cubit.state.error == null) {
-      await context.read<AuthCubit>().refreshUser();
-    }
   }
 
   Widget _buildDriverPhoto(
     BuildContext context,
-    OnboardingState state,
-    // DriverOnboardingCubit cubit,
+    DriverOnboardingLoadedState data,
   ) {
     return Column(
       children: [
@@ -493,8 +576,8 @@ class _WizardViewState extends State<_WizardView> {
                   ),
                 ),
                 child: ClipOval(
-                  child: state.avatarPath != null
-                      ? Image.file(File(state.avatarPath!), fit: BoxFit.cover)
+                  child: data.avatarPath != null
+                      ? Image.file(File(data.avatarPath!), fit: BoxFit.cover)
                       : Icon(
                           Icons.person_outline,
                           size: 45.sp,
@@ -593,21 +676,54 @@ class _WizardViewState extends State<_WizardView> {
     );
   }
 
+  Widget _buildDistrictField(List<DistrictModel> districts) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 14.h),
+      child: DropdownButtonFormField<DistrictModel>(
+        value: _selectedDistrict,
+        isExpanded: true,
+        decoration: _dec('المنطقة / الحي', Icons.location_on_outlined),
+        style: TextStyle(
+          fontFamily: 'Cairo',
+          fontSize: 14.sp,
+          color: AppColors.onSurface,
+        ),
+        items: [
+          for (final district in districts)
+            DropdownMenuItem<DistrictModel>(
+              value: district,
+              child: Text(district.nameAr),
+            ),
+        ],
+        onChanged: (value) => setState(() => _selectedDistrict = value),
+        validator: (value) => value == null ? 'اختر المنطقة' : null,
+      ),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // STEP 2
   // ---------------------------------------------------------------------------
 
-  Widget _vehicleSection(BuildContext context, OnboardingState state) {
+  Widget _vehicleSection(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     return _sectionCard(
       stepText: 'خطوة ٢ من ٣',
       title: _titles[1],
       subtitle: _subtitles[1],
       icon: _icons[1],
-      child: _vehicleStep(context, state),
+      child: _vehicleStep(context, data, busy),
     );
   }
 
-  Widget _vehicleStep(BuildContext context, OnboardingState state) {
+  Widget _vehicleStep(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     final cubit = context.read<DriverOnboardingCubit>();
     const vehiclePhotoTypes = [
       DocType.vehicleFront,
@@ -647,7 +763,7 @@ class _WizardViewState extends State<_WizardView> {
               child: DocumentTile(
                 label: type.labelAr,
                 icon: vehiclePhotoIcons[type]!,
-                slot: state.slot(type),
+                slot: data.slot(type),
                 enabled: true,
                 onPicked: (path) => cubit.uploadDocument(type, path),
                 onRemove: () => cubit.removeDocument(type),
@@ -683,7 +799,7 @@ class _WizardViewState extends State<_WizardView> {
           _bigButton(
             label: 'التالي',
             icon: Icons.arrow_forward,
-            busy: state.busy,
+            busy: busy,
             onPressed: () => _saveVehicle(context),
           ),
         ],
@@ -703,9 +819,6 @@ class _WizardViewState extends State<_WizardView> {
         color: color,
       ),
     );
-    if (mounted && context.read<DriverOnboardingCubit>().state.error == null) {
-      await context.read<AuthCubit>().refreshUser();
-    }
   }
 
   Widget _buildCarColorField() {
@@ -865,17 +978,25 @@ class _WizardViewState extends State<_WizardView> {
   // STEP 3
   // ---------------------------------------------------------------------------
 
-  Widget _documentsSection(BuildContext context, OnboardingState state) {
+  Widget _documentsSection(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     return _sectionCard(
       stepText: 'خطوة ٣ من ٣',
       title: _titles[2],
       subtitle: _subtitles[2],
       icon: _icons[2],
-      child: _documentsStep(context, state),
+      child: _documentsStep(context, data, busy),
     );
   }
 
-  Widget _documentsStep(BuildContext context, OnboardingState state) {
+  Widget _documentsStep(
+    BuildContext context,
+    DriverOnboardingLoadedState data,
+    bool busy,
+  ) {
     final cubit = context.read<DriverOnboardingCubit>();
 
     const icons = {
@@ -927,7 +1048,7 @@ class _WizardViewState extends State<_WizardView> {
                 child: DocumentTile(
                   label: type.labelAr,
                   icon: icons[type]!,
-                  slot: state.slot(type),
+                  slot: data.slot(type),
                   enabled: true,
                   onPicked: (path) => cubit.uploadDocument(type, path),
                   onRemove: () => cubit.removeDocument(type),
@@ -940,7 +1061,7 @@ class _WizardViewState extends State<_WizardView> {
         _bigButton(
           label: 'إرسال طلب التسجيل',
           icon: Icons.rocket_launch_outlined,
-          busy: state.busy || state.anyUploading,
+          busy: busy || data.anyUploading,
           onPressed: () => cubit.submit(),
         ),
       ],

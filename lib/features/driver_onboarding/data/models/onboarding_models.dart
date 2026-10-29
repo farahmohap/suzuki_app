@@ -35,13 +35,51 @@ class PersonalInput extends Equatable {
     required this.birthDate,
     required this.gender,
     required this.avatarPath,
+    required this.districtId,
   });
 
   final String fullName;
   final String nationalId;
   final DateTime birthDate;
   final Gender gender;
+
+  /// Local file path — sent as multipart `avatar` field.
   final String avatarPath;
+
+  final int districtId;
+
+  /// JSON fields (non-file) that go into the form data alongside the avatar.
+  Map<String, dynamic> toJson() => {
+        'full_name': fullName,
+        'national_id': nationalId,
+        'birth_date':
+            '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
+        'gender': gender.apiValue,
+        'district_id': districtId,
+      };
+
+  @override
+  List<Object?> get props =>
+      [fullName, nationalId, birthDate, gender, avatarPath, districtId];
+}
+
+/// JSON body contract for `PUT /drivers/register/step1`.
+class DriverStep1Request extends Equatable {
+  const DriverStep1Request({
+    required this.fullName,
+    required this.nationalId,
+    required this.birthDate,
+    required this.gender,
+    required this.avatarKey,
+    required this.districtId,
+  });
+
+  final String fullName;
+  final String nationalId;
+  final DateTime birthDate;
+  final Gender gender;
+  final String avatarKey;
+  final int districtId;
 
   Map<String, dynamic> toJson() => {
         'full_name': fullName,
@@ -49,11 +87,19 @@ class PersonalInput extends Equatable {
         'birth_date':
             '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
         'gender': gender.apiValue,
+        'avatar_key': avatarKey,
+        'district_id': districtId,
       };
 
   @override
-  List<Object?> get props =>
-      [fullName, nationalId, birthDate, gender, avatarPath];
+  List<Object?> get props => [
+        fullName,
+        nationalId,
+        birthDate,
+        gender,
+        avatarKey,
+        districtId,
+      ];
 }
 
 class VehicleInput extends Equatable {
