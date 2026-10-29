@@ -1,8 +1,10 @@
-// GENERATED CODE - MANUAL & INJECTABLE BOOTSTRAPPER
+// GENERATED CODE - hand-maintained until build_runner is run.
+// Regenerate: dart run build_runner build --delete-conflicting-outputs
 // ignore_for_file: type=lint
 // coverage:ignore-file
 
 import 'package:dio/dio.dart' as _i361;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i001;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
@@ -32,7 +34,23 @@ import '../../features/passenger/data/repositories/passenger_repository_impl.dar
     as _i703;
 import '../../features/passenger/presentation/cubit/passenger_cubits.dart'
     as _i704;
+import '../../features/driver_onboarding/data/datasources/driver_onboarding_remote_data_source.dart'
+    as _i910;
+import '../../features/driver_onboarding/data/repositories/driver_onboarding_repository.dart'
+    as _i911;
+import '../../features/driver_onboarding/presentation/cubit/driver_onboarding_cubit.dart'
+    as _i912;
+import '../../features/driver_onboarding/presentation/cubit/driver_status_cubit.dart'
+    as _i913;
+import '../../features/profile/data/datasources/profile_remote_data_source.dart'
+    as _i920;
+import '../../features/profile/data/repositories/profile_repository.dart'
+    as _i921;
+import '../../features/profile/presentation/cubit/profile_cubit.dart' as _i922;
 import '../network/network_info.dart' as _i600;
+import '../network/socket_service.dart' as _i601;
+import '../session/session_events.dart' as _i603;
+import '../storage/token_storage.dart' as _i604;
 import 'injection.dart' as _i100;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -50,13 +68,31 @@ extension GetItInjectableX on _i174.GetIt {
 
     // Core & External
     final sharedPreferences = await registerModule.sharedPreferences;
-    gh.factory<_i460.SharedPreferences>(() => sharedPreferences);
-    gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
+    gh.singleton<_i460.SharedPreferences>(() => sharedPreferences);
+    gh.lazySingleton<_i001.FlutterSecureStorage>(
+      () => registerModule.secureStorage,
+    );
+    gh.lazySingleton<_i603.SessionEvents>(() => _i603.SessionEvents());
+    gh.lazySingleton<_i604.TokenStorage>(
+      () => _i604.SecureTokenStorage(gh<_i001.FlutterSecureStorage>()),
+    );
+    gh.lazySingleton<_i361.Dio>(
+      () => registerModule.dio(
+        gh<_i604.TokenStorage>(),
+        gh<_i603.SessionEvents>(),
+      ),
+    );
     gh.lazySingleton<_i600.NetworkInfo>(() => const _i600.NetworkInfoImpl());
+    gh.lazySingleton<_i601.SocketService>(
+      () => _i601.SocketService(gh<_i604.TokenStorage>()),
+    );
 
     // Auth
     gh.lazySingleton<_i800.AuthLocalDataSource>(
-      () => _i800.AuthLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
+      () => _i800.AuthLocalDataSourceImpl(
+        gh<_i460.SharedPreferences>(),
+        gh<_i604.TokenStorage>(),
+      ),
     );
     gh.lazySingleton<_i801.AuthRemoteDataSource>(
       () => _i801.AuthRemoteDataSourceImpl(gh<_i361.Dio>()),
@@ -68,8 +104,43 @@ extension GetItInjectableX on _i174.GetIt {
         networkInfo: gh<_i600.NetworkInfo>(),
       ),
     );
-    gh.factory<_i804.AuthCubit>(
-      () => _i804.AuthCubit(authRepository: gh<_i802.AuthRepository>()),
+    gh.lazySingleton<_i804.AuthCubit>(
+      () => _i804.AuthCubit(
+        gh<_i802.AuthRepository>(),
+        gh<_i603.SessionEvents>(),
+      ),
+      dispose: (c) => c.close(),
+    );
+
+    // Profile (phase 2)
+    gh.lazySingleton<_i920.ProfileRemoteDataSource>(
+      () => _i920.ProfileRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i921.ProfileRepository>(
+      () => _i921.ProfileRepositoryImpl(
+        gh<_i920.ProfileRemoteDataSource>(),
+        gh<_i600.NetworkInfo>(),
+      ),
+    );
+    gh.factory<_i922.ProfileCubit>(
+      () => _i922.ProfileCubit(gh<_i921.ProfileRepository>()),
+    );
+
+    // Driver onboarding (phase 2)
+    gh.lazySingleton<_i910.DriverOnboardingRemoteDataSource>(
+      () => _i910.DriverOnboardingRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i911.DriverOnboardingRepository>(
+      () => _i911.DriverOnboardingRepositoryImpl(
+        gh<_i910.DriverOnboardingRemoteDataSource>(),
+        gh<_i600.NetworkInfo>(),
+      ),
+    );
+    gh.factory<_i912.DriverOnboardingCubit>(
+      () => _i912.DriverOnboardingCubit(gh<_i911.DriverOnboardingRepository>()),
+    );
+    gh.factory<_i913.DriverStatusCubit>(
+      () => _i913.DriverStatusCubit(gh<_i911.DriverOnboardingRepository>()),
     );
 
     // Passenger

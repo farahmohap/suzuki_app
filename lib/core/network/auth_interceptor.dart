@@ -1,89 +1,114 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-/// Injects the Bearer auth token into every outgoing request.
-/// Handles 401 responses: attempts one token refresh, then clears session.
-class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this._dio);
+import '../session/session_events.dart';
+import '../storage/token_storage.dart';
+import 'api_endpoints.dart';
+import 'api_response.dart';
 
-  final Dio _dio;
+/// Marks a request that must NOT carry a token and must NOT trigger refresh
+/// (OTP request/verify, refresh itself).
+const String kSkipAuth = 'skipAuth';
+const String _kRetried = 'authRetried';
 
-  static const _tokenKey = 'auth_token';
-  static const _refreshTokenKey = 'refresh_token';
+/// Injects the Bearer token and transparently refreshes it on 401.
+///
+/// Extends [QueuedInterceptor] so concurrent 401s are handled one at a time:
+/// the first refreshes, the rest see the new token and just retry.
+class AuthInterceptor extends QueuedInterceptor {
+  AuthInterceptor({
+    required Dio apiDio,
+    required Dio refreshDio,
+    required TokenStorage tokens,
+    required SessionEvents session,
+  })  : _api = apiDio,
+        _refreshDio = refreshDio,
+        _tokens = tokens,
+        _session = session;
 
-  // ── Request ─────────────────────────────────────────────────────────────────
+  final Dio _api; // the Dio this interceptor is attached to (for retry)
+  final Dio _refreshDio; // bare Dio, no interceptors (avoids refresh loops)
+  final TokenStorage _tokens;
+  final SessionEvents _session;
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _getToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+    if (options.extra[kSkipAuth] != true) {
+      final token = await _tokens.readAccess();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
     }
     handler.next(options);
   }
 
-  // ── Error / 401 Refresh Logic ───────────────────────────────────────────────
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401) {
-      final refreshed = await _tryRefreshToken();
-      if (refreshed) {
-        // Retry original request with new token
-        final token = await _getToken();
-        final opts = err.requestOptions;
-        opts.headers['Authorization'] = 'Bearer $token';
-        try {
-          final response = await _dio.fetch(opts);
-          return handler.resolve(response);
-        } on DioException catch (e) {
-          return handler.next(e);
-        }
-      } else {
-        await _clearSession();
-      }
+    final req = err.requestOptions;
+    final is401 = err.response?.statusCode == 401;
+    if (!is401 || req.extra[kSkipAuth] == true || req.extra[_kRetried] == true) {
+      return handler.next(err);
     }
-    handler.next(err);
-  }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
+    // Another queued request may already have refreshed the token.
+    final current = await _tokens.readAccess();
+    final used = req.headers['Authorization'];
+    if (current != null && current.isNotEmpty && 'Bearer $current' != used) {
+      return _retry(req, current, handler, err);
+    }
 
-  Future<bool> _tryRefreshToken() async {
+    final refresh = await _tokens.readRefresh();
+    if (refresh == null || refresh.isEmpty) {
+      await _expire();
+      return handler.next(err);
+    }
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final refresh = prefs.getString(_refreshTokenKey);
-      if (refresh == null) return false;
-
-      final response = await _dio.post(
-        '/auth/refresh',
+      final res = await _refreshDio.post(
+        ApiEndpoints.refreshToken,
         data: {'refresh_token': refresh},
-        options: Options(
-          headers: {'Authorization': null}, // Skip auth interceptor
-        ),
+        options: Options(extra: {kSkipAuth: true}),
       );
-
-      final newToken = response.data['access_token'] as String?;
-      if (newToken != null) {
-        await prefs.setString(_tokenKey, newToken);
-        return true;
+      final body = unwrapData(res.data);
+      final access = body['access_token'] as String?;
+      // Backend rotates refresh tokens: always store the new one.
+      final newRefresh = (body['refresh_token'] as String?) ?? refresh;
+      if (access == null || access.isEmpty) {
+        await _expire();
+        return handler.next(err);
       }
-      return false;
-    } catch (_) {
-      return false;
+      await _tokens.save(access: access, refresh: newRefresh);
+      return _retry(req, access, handler, err);
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      // Only a definite rejection ends the session; a network blip does not.
+      if (code == 400 || code == 401 || code == 403) await _expire();
+      return handler.next(err);
     }
   }
 
-  Future<void> _clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_refreshTokenKey);
+  Future<void> _retry(
+    RequestOptions req,
+    String token,
+    ErrorInterceptorHandler handler,
+    DioException original,
+  ) async {
+    req.headers['Authorization'] = 'Bearer $token';
+    req.extra[_kRetried] = true;
+    try {
+      handler.resolve(await _api.fetch(req));
+    } on DioException catch (e) {
+      handler.next(e);
+    }
+  }
+
+  Future<void> _expire() async {
+    await _tokens.clear();
+    _session.notifyExpired();
   }
 }

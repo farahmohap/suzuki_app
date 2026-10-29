@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
+
 import '../../data/models/auth_model.dart';
 
-/// Immutable sealed state hierarchy for [AuthCubit].
 sealed class AuthState extends Equatable {
   const AuthState();
 
@@ -9,32 +9,30 @@ sealed class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Initial state — no action taken yet.
+/// App just started; session not yet checked.
 final class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
-/// A long-running auth operation is in progress.
+/// A network operation (OTP request / verify) is in progress.
 final class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
-/// Authentication succeeded with [AuthModel].
 final class AuthAuthenticated extends AuthState {
-  const AuthAuthenticated(this.user);
+  const AuthAuthenticated(this.user, {this.isNewUser = false});
 
   final AuthModel user;
+  final bool isNewUser;
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, isNewUser];
 }
 
-/// User is confirmed unauthenticated (logged out / no token).
 final class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
-/// An auth operation failed.
 final class AuthError extends AuthState {
   const AuthError(this.message);
 
@@ -44,19 +42,9 @@ final class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-/// OTP has been sent — waiting for verification.
+/// OTP sent; the OTP screen is waiting for the code.
 final class AuthOtpSent extends AuthState {
   const AuthOtpSent({required this.phone});
-
-  final String phone;
-
-  @override
-  List<Object?> get props => [phone];
-}
-
-/// OTP resend succeeded.
-final class AuthOtpResent extends AuthState {
-  const AuthOtpResent({required this.phone});
 
   final String phone;
 

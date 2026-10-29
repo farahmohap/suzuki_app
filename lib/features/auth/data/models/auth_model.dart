@@ -1,143 +1,168 @@
 import 'package:equatable/equatable.dart';
-import 'package:image_picker/image_picker.dart';
 
-/// User role within the سوزوكي platform.
+import '../../../../core/network/api_response.dart';
+
+/// User role within the platform.
 enum UserRole {
   passenger,
   driver;
 
-  static UserRole fromString(String? role) {
-    if (role == 'driver') return UserRole.driver;
-    return UserRole.passenger;
+  static UserRole fromString(String? role) =>
+      role == 'driver' ? UserRole.driver : UserRole.passenger;
+
+  String get apiValue => name;
+}
+
+/// Driver verification lifecycle (backend `driver_profiles.verification_status`).
+enum VerificationStatus {
+  /// Not a driver, or onboarding not started.
+  none,
+  draft,
+  needsDocuments,
+  pending,
+  approved,
+  rejected,
+  suspended;
+
+  String get apiValue => switch (this) {
+        VerificationStatus.none => 'needs_profile',
+        VerificationStatus.draft => 'draft',
+        VerificationStatus.needsDocuments => 'needs_documents',
+        VerificationStatus.pending => 'pending_review',
+        VerificationStatus.approved => 'approved',
+        VerificationStatus.rejected => 'rejected',
+        VerificationStatus.suspended => 'suspended',
+      };
+
+  static VerificationStatus fromString(String? s) {
+    // The API's account lifecycle names differ from the driver's review
+    // names used internally by the app.
+    switch (s) {
+      case 'needs_profile':
+      case 'none':
+        return VerificationStatus.none;
+      case 'draft':
+        return VerificationStatus.draft;
+      case 'needs_documents':
+        return VerificationStatus.needsDocuments;
+      case 'pending_review':
+      case 'pending':
+        return VerificationStatus.pending;
+      case 'active':
+      case 'approved':
+        return VerificationStatus.approved;
+      case 'rejected':
+        return VerificationStatus.rejected;
+      case 'suspended':
+        return VerificationStatus.suspended;
+      default:
+        return VerificationStatus.none;
+    }
   }
 }
 
-/// Data model representing an authenticated user.
+/// The signed-in user (no tokens — those live in secure storage).
 class AuthModel extends Equatable {
   const AuthModel({
     required this.userId,
-    required this.token,
-    required this.refreshToken,
     required this.role,
     required this.phone,
     this.fullName,
     this.avatarUrl,
+    this.profileComplete = false,
+    this.driverStatus = VerificationStatus.none,
   });
 
   final String userId;
-  final String token;
-  final String refreshToken;
   final UserRole role;
   final String phone;
   final String? fullName;
   final String? avatarUrl;
 
+  /// Passenger: name/district/address/location saved.
+  final bool profileComplete;
+
+  /// Driver only.
+  final VerificationStatus driverStatus;
+
   bool get isDriver => role == UserRole.driver;
   bool get isPassenger => role == UserRole.passenger;
 
+  /// Accepts `{data:{user:{...}}}`, `{user:{...}}` or a bare user object.
   factory AuthModel.fromJson(Map<String, dynamic> json) {
+    final body = unwrapData(json);
+    final u = body['user'] is Map<String, dynamic>
+        ? body['user'] as Map<String, dynamic>
+        : body;
     return AuthModel(
-      userId: json['user_id'] as String? ?? json['id'] as String? ?? '',
-      token: json['access_token'] as String? ?? json['token'] as String? ?? '',
-      refreshToken: json['refresh_token'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String?),
-      phone: json['phone'] as String? ?? '',
-      fullName: json['full_name'] as String? ?? json['name'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
+      userId: (u['id'] ?? u['user_id'] ?? '').toString(),
+      role: UserRole.fromString(u['role'] as String?),
+      phone: u['phone'] as String? ?? '',
+      fullName: u['full_name'] as String?,
+      avatarUrl: u['avatar_url'] as String?,
+      profileComplete: u['profile_complete'] as bool? ?? false,
+      driverStatus: VerificationStatus.fromString(
+        (u['status'] ?? u['driver_status'] ?? u['verification_status'])
+            as String?,
+      ),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'user_id': userId,
-    'access_token': token,
-    'refresh_token': refreshToken,
-    'role': role.name,
-    'phone': phone,
-    'full_name': fullName,
-    'avatar_url': avatarUrl,
-  };
-
-  factory AuthModel.fromCacheJson(Map<String, dynamic> json) =>
-      AuthModel.fromJson(json);
+        'id': userId,
+        'role': role.apiValue,
+        'phone': phone,
+        'full_name': fullName,
+        'avatar_url': avatarUrl,
+        'profile_complete': profileComplete,
+        'driver_status': driverStatus.apiValue,
+      };
 
   AuthModel copyWith({
-    String? userId,
-    String? token,
-    String? refreshToken,
-    UserRole? role,
-    String? phone,
     String? fullName,
     String? avatarUrl,
-  }) {
-    return AuthModel(
-      userId: userId ?? this.userId,
-      token: token ?? this.token,
-      refreshToken: refreshToken ?? this.refreshToken,
-      role: role ?? this.role,
-      phone: phone ?? this.phone,
-      fullName: fullName ?? this.fullName,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+    bool? profileComplete,
+    VerificationStatus? driverStatus,
+  }) =>
+      AuthModel(
+        userId: userId,
+        role: role,
+        phone: phone,
+        fullName: fullName ?? this.fullName,
+        avatarUrl: avatarUrl ?? this.avatarUrl,
+        profileComplete: profileComplete ?? this.profileComplete,
+        driverStatus: driverStatus ?? this.driverStatus,
+      );
+
+  @override
+  List<Object?> get props =>
+      [userId, role, phone, fullName, avatarUrl, profileComplete, driverStatus];
+}
+
+/// Result of a successful OTP verification.
+class AuthSession extends Equatable {
+  const AuthSession({
+    required this.user,
+    required this.accessToken,
+    required this.refreshToken,
+    required this.isNewUser,
+  });
+
+  final AuthModel user;
+  final String accessToken;
+  final String refreshToken;
+  final bool isNewUser;
+
+  factory AuthSession.fromJson(Map<String, dynamic> json) {
+    final body = unwrapData(json);
+    return AuthSession(
+      user: AuthModel.fromJson(body),
+      accessToken: body['access_token'] as String? ?? '',
+      refreshToken: body['refresh_token'] as String? ?? '',
+      isNewUser: body['is_new_user'] as bool? ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [
-    userId,
-    token,
-    refreshToken,
-    role,
-    phone,
-    fullName,
-    avatarUrl,
-  ];
-}
-
-enum Gender { male, female }
-
-class DriverRegistrationModel {
-  String fullName;
-  String phoneNumber;
-  int age;
-  Gender gender;
-  XFile? driverPhoto;
-
-  // المستندات
-  String? nationalIdFrontPath;
-  String? nationalIdBackPath;
-  String? drivingLicensePath;
-  String? vehicleLicensePath;
-  String? criminalRecordPath; // الفيش والتشبيه
-
-  // بيانات وبيانات صوَر المركبة
-  String plateNumbers; // الأرقام
-  String plateLetters; // الحروف
-  String? vehicleFrontPhoto;
-  String? vehicleBackPhoto;
-  String? vehicleInteriorPhoto;
-
-  // المناطق والتشغيل (مدينة العبور وأحيائها)
-  List<String> selectedElObourDistricts;
-  String cashWalletNumber;
-
-  DriverRegistrationModel({
-    this.fullName = '',
-    this.phoneNumber = '',
-    this.age = 18,
-    this.gender = Gender.male,
-    this.plateNumbers = '',
-    this.plateLetters = '',
-    List<String>? selectedElObourDistricts,
-    this.cashWalletNumber = '',
-    this.driverPhoto,
-    this.nationalIdFrontPath,
-    this.nationalIdBackPath,
-    this.drivingLicensePath,
-    this.vehicleLicensePath,
-    this.criminalRecordPath,
-    this.vehicleFrontPhoto,
-    this.vehicleBackPhoto,
-    this.vehicleInteriorPhoto,
-  }) : selectedElObourDistricts = selectedElObourDistricts != null
-           ? List<String>.from(selectedElObourDistricts)
-           : [];
+  List<Object?> get props => [user, accessToken, refreshToken, isNewUser];
 }

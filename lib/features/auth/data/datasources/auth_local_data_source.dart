@@ -1,81 +1,85 @@
 import 'dart:convert';
+import 'dart:math';
+
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../models/auth_model.dart';
 
-/// Contract for local auth storage operations.
+/// Local auth storage: tokens → secure storage, user snapshot/device id → prefs.
 abstract class AuthLocalDataSource {
+  Future<void> saveSession(AuthSession session);
   Future<void> cacheUser(AuthModel user);
   Future<AuthModel?> getCachedUser();
-  Future<void> saveToken(String token, String refreshToken);
-  Future<String?> getToken();
+  Future<bool> hasTokens();
   Future<String?> getRefreshToken();
-  Future<void> saveRole(String role);
-  Future<String?> getRole();
+  Future<String> getOrCreateDeviceId();
   Future<void> clearSession();
 }
 
-/// [SharedPreferences]-backed implementation.
 @LazySingleton(as: AuthLocalDataSource)
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  AuthLocalDataSourceImpl(this._prefs);
+  AuthLocalDataSourceImpl(this._prefs, this._tokens);
 
   final SharedPreferences _prefs;
+  final TokenStorage _tokens;
 
   static const _cachedUserKey = 'cached_user';
-  static const _tokenKey = 'auth_token';
-  static const _refreshTokenKey = 'refresh_token';
-  static const _roleKey = 'user_role';
+  static const _deviceIdKey = 'device_id';
+
+  @override
+  Future<void> saveSession(AuthSession s) async {
+    await _tokens.save(access: s.accessToken, refresh: s.refreshToken);
+    await cacheUser(s.user);
+  }
 
   @override
   Future<void> cacheUser(AuthModel user) async {
     try {
       await _prefs.setString(_cachedUserKey, jsonEncode(user.toJson()));
-    } catch (e) {
+    } catch (_) {
       throw const CacheException(message: 'تعذّر حفظ بيانات المستخدم');
     }
   }
 
   @override
   Future<AuthModel?> getCachedUser() async {
-    final json = _prefs.getString(_cachedUserKey);
-    if (json == null) return null;
+    final raw = _prefs.getString(_cachedUserKey);
+    if (raw == null) return null;
     try {
-      return AuthModel.fromCacheJson(
-          jsonDecode(json) as Map<String, dynamic>);
+      return AuthModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
   }
 
   @override
-  Future<void> saveToken(String token, String refreshToken) async {
-    await _prefs.setString(_tokenKey, token);
-    await _prefs.setString(_refreshTokenKey, refreshToken);
+  Future<bool> hasTokens() async {
+    final t = await _tokens.readAccess();
+    return t != null && t.isNotEmpty;
   }
 
   @override
-  Future<String?> getToken() async => _prefs.getString(_tokenKey);
+  Future<String?> getRefreshToken() => _tokens.readRefresh();
 
   @override
-  Future<String?> getRefreshToken() async =>
-      _prefs.getString(_refreshTokenKey);
-
-  @override
-  Future<void> saveRole(String role) async =>
-      _prefs.setString(_roleKey, role);
-
-  @override
-  Future<String?> getRole() async => _prefs.getString(_roleKey);
+  Future<String> getOrCreateDeviceId() async {
+    final existing = _prefs.getString(_deviceIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final rnd = Random.secure();
+    final id = List.generate(
+      16,
+      (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    await _prefs.setString(_deviceIdKey, id);
+    return id;
+  }
 
   @override
   Future<void> clearSession() async {
-    await Future.wait([
-      _prefs.remove(_cachedUserKey),
-      _prefs.remove(_tokenKey),
-      _prefs.remove(_refreshTokenKey),
-      _prefs.remove(_roleKey),
-    ]);
+    await _tokens.clear();
+    await _prefs.remove(_cachedUserKey);
   }
 }

@@ -1,13 +1,72 @@
 /// Input validation utilities for سوزوكي app.
 /// All error messages returned in Arabic.
 abstract final class AppValidators {
-  /// Phone number: Saudi format — starts with 05 and is 10 digits.
-  static String? phone(String? value) {
-    if (value == null || value.trim().isEmpty) return 'رقم الجوال مطلوب';
-    final digits = value.replaceAll(RegExp(r'\D'), '');
-    if (!RegExp(r'^05[0-9]{8}$').hasMatch(digits)) {
-      return 'أدخل رقم جوال  صحيح (05xxxxxxxx)';
+  /// Converts Arabic-Indic / Persian digits to ASCII so validation and the
+  /// API always see 0-9.
+  static String toAsciiDigits(String input) {
+    const arabic = '٠١٢٣٤٥٦٧٨٩';
+    const persian = '۰۱۲۳۴۵۶۷۸۹';
+    final b = StringBuffer();
+    for (final ch in input.runes) {
+      final c = String.fromCharCode(ch);
+      final a = arabic.indexOf(c);
+      final p = persian.indexOf(c);
+      b.write(a >= 0 ? '$a' : (p >= 0 ? '$p' : c));
     }
+    return b.toString();
+  }
+
+  /// Local Egyptian mobile number: 010 / 011 / 012 / 015 + 8 digits.
+  /// Accepts +20 / 0020 prefixes and spaces.
+  static String? phone(String? value) {
+    if (value == null || value.trim().isEmpty) return 'رقم الموبايل مطلوب';
+    if (normalizePhone(value) == null) {
+      return 'أدخل رقم موبايل مصري صحيح (مثال: 01012345678)';
+    }
+    return null;
+  }
+
+  /// Returns `+201XXXXXXXXX` or null when [raw] is not a valid Egyptian mobile.
+  static String? normalizePhone(String raw) {
+    var d = toAsciiDigits(raw).replaceAll(RegExp(r'\D'), '');
+    if (d.startsWith('0020')) d = d.substring(4);
+    if (d.startsWith('20') && d.length == 12) d = d.substring(2);
+    if (d.length == 10 && d.startsWith('1')) d = '0$d';
+    if (!RegExp(r'^01[0125][0-9]{8}$').hasMatch(d)) return null;
+    return '+20${d.substring(1)}';
+  }
+
+  /// Egyptian national ID: 14 digits.
+  static String? nationalId(String? value) {
+    final v = toAsciiDigits(value ?? '').trim();
+    if (v.isEmpty) return 'الرقم القومي مطلوب';
+    if (!RegExp(r'^\d{14}$').hasMatch(v)) return 'الرقم القومي يجب أن يكون 14 رقم';
+    return null;
+  }
+
+  /// Plate numbers part: 1–4 digits.
+  static String? plateNumbers(String? value) {
+    final v = toAsciiDigits(value ?? '').trim();
+    if (v.isEmpty) return 'أرقام اللوحة مطلوبة';
+    if (!RegExp(r'^\d{1,4}$').hasMatch(v)) return 'من 1 إلى 4 أرقام';
+    return null;
+  }
+
+  /// Plate letters part: 2–3 Arabic letters (spaces allowed).
+  static String? plateLetters(String? value) {
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return 'حروف اللوحة مطلوبة';
+    if (!RegExp(r'^[\u0621-\u064A](\s?[\u0621-\u064A]){1,2}$').hasMatch(v)) {
+      return 'من 2 إلى 3 حروف عربية';
+    }
+    return null;
+  }
+
+  /// Age in years (adults + teens allowed to ride with guardians: 14–90).
+  static String? age(String? value) {
+    final v = int.tryParse(toAsciiDigits(value ?? '').trim());
+    if (v == null) return 'السن مطلوب';
+    if (v < 14 || v > 90) return 'أدخل سنًا صحيحًا';
     return null;
   }
 

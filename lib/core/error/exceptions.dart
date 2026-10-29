@@ -19,9 +19,13 @@ final class ServerException extends AppException {
     required super.message,
     super.code,
     this.statusCode,
+    this.fields,
   });
 
   final int? statusCode;
+
+  /// Per-field validation messages from the backend (`error.fields`).
+  final Map<String, String>? fields;
 }
 
 /// Thrown when there is no network connectivity or a connection timeout.

@@ -1,38 +1,30 @@
 import 'package:fpdart/fpdart.dart';
+
 import '../../../../core/network/failures.dart';
 import '../models/auth_model.dart';
 
-/// Contract for auth operations returning [AuthModel] directly.
 abstract class AuthRepository {
-  /// Authenticates user with phone + password.
-  Future<Either<Failure, AuthModel>> login({
+  /// Sends a 6-digit OTP by SMS to [phone] (`+201XXXXXXXXX`).
+  Future<Either<Failure, Unit>> requestOtp({
     required String phone,
-    required String password,
+    required UserRole role,
   });
 
-  /// Registers a new user account.
-  Future<Either<Failure, AuthModel>> register({
+  /// Verifies the OTP, stores tokens securely and caches the user.
+  Future<Either<Failure, AuthSession>> verifyOtp({
     required String phone,
-    required String password,
-    required String fullName,
-    required String role,
+    required String code,
   });
 
-  /// Verifies the OTP sent to [phone].
-  Future<Either<Failure, AuthModel>> verifyOtp({
-    required String phone,
-    required String otp,
-  });
+  /// Re-reads `/users/me` and updates the cached user.
+  Future<Either<Failure, AuthModel>> refreshUser();
 
-  /// Resends OTP to [phone].
-  Future<Either<Failure, bool>> resendOtp({required String phone});
+  /// Revokes the refresh token (best effort) and clears local session.
+  Future<void> logout();
 
-  /// Logs out the current user (clears local session).
-  Future<Either<Failure, bool>> logout();
+  /// Signed-in user from local storage, or null.
+  Future<AuthModel?> restoreSession();
 
-  /// Checks whether a valid auth token exists locally.
-  Future<bool> isAuthenticated();
-
-  /// Returns the cached [AuthModel] if available.
-  Future<AuthModel?> getCachedUser();
+  /// Persists an updated user snapshot (after profile/onboarding changes).
+  Future<void> cacheUser(AuthModel user);
 }
