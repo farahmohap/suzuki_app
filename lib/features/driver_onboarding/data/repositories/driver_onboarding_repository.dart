@@ -49,14 +49,7 @@ class DriverOnboardingRepositoryImpl implements DriverOnboardingRepository {
   Future<Either<Failure, DriverStepResponse>> saveDocumentsAndSubmit(
     Map<DocType, String> filePaths,
   ) =>
-      guardCall(_network, () async {
-        final step3Response = await _remote.saveStep3(filePaths);
-        try {
-          return await _remote.submit();
-        } catch (_) {
-          return step3Response;
-        }
-      });
+      guardCall(_network, () => _remote.saveStep3(filePaths));
 
   @override
   Future<Either<Failure, VerificationInfo>> getStatus() =>

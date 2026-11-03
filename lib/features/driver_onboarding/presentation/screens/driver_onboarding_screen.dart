@@ -134,10 +134,7 @@ class _WizardViewState extends State<_WizardView> {
         if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                error,
-                style: const TextStyle(fontFamily: 'Cairo'),
-              ),
+              content: Text(error, style: const TextStyle(fontFamily: 'Cairo')),
             ),
           );
         }
@@ -547,10 +544,7 @@ class _WizardViewState extends State<_WizardView> {
     if (district == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'اختر المنطقة',
-            style: TextStyle(fontFamily: 'Cairo'),
-          ),
+          content: Text('اختر المنطقة', style: TextStyle(fontFamily: 'Cairo')),
         ),
       );
       return;
@@ -903,7 +897,7 @@ class _WizardViewState extends State<_WizardView> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-                color: AppColors.secondaryContainer,
+                color: const Color.fromARGB(255, 54, 11, 210),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -913,7 +907,7 @@ class _WizardViewState extends State<_WizardView> {
                         fontFamily: 'Cairo',
                         fontWeight: FontWeight.bold,
                         fontSize: 12.sp,
-                        color: AppColors.onSecondaryContainer,
+                        color: const Color.fromARGB(255, 252, 253, 255),
                       ),
                     ),
                     Text(
@@ -922,7 +916,7 @@ class _WizardViewState extends State<_WizardView> {
                         fontFamily: 'IBM Plex Sans',
                         fontWeight: FontWeight.bold,
                         fontSize: 12.sp,
-                        color: AppColors.onSecondaryContainer,
+                        color: const Color.fromARGB(255, 252, 253, 255),
                       ),
                     ),
                   ],

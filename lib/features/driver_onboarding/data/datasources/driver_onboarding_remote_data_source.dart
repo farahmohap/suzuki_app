@@ -9,7 +9,6 @@ abstract class DriverOnboardingRemoteDataSource {
   Future<DriverStepResponse> saveStep1(PersonalInput input);
   Future<DriverStepResponse> saveStep2(VehicleInput input);
   Future<DriverStepResponse> saveStep3(Map<DocType, String> filePaths);
-  Future<DriverStepResponse> submit();
   Future<VerificationInfo> getStatus();
   Future<void> replaceDocument(DocType type, String filePath);
 }
@@ -56,78 +55,75 @@ class DriverOnboardingRemoteDataSourceImpl
   }
 
   @override
-  Future<DriverStepResponse> saveStep1(PersonalInput input) =>
-      _run(() async {
-        final formData = FormData.fromMap({
-          '_method': 'PUT',
-          'full_name': input.fullName,
-          'national_id': input.nationalId,
-          'birth_date': input.birthDateFormatted,
-          'gender': input.gender.apiValue,
-          'district_id': input.districtId,
-          'avatar_key': await MultipartFile.fromFile(input.avatarPath),
-          'avatar': await MultipartFile.fromFile(input.avatarPath),
-        });
-        final res = await _sendMultipartPut(ApiEndpoints.driverStep1, formData);
-        return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
-      });
+  Future<DriverStepResponse> saveStep1(PersonalInput input) => _run(() async {
+    final formData = FormData.fromMap({
+      '_method': 'PUT',
+      'full_name': input.fullName,
+      'national_id': input.nationalId,
+      'birth_date': input.birthDateFormatted,
+      'gender': input.gender.apiValue,
+      'district_id': input.districtId,
+      'avatar_key': await MultipartFile.fromFile(input.avatarPath),
+      'avatar': await MultipartFile.fromFile(input.avatarPath),
+    });
+    final res = await _sendMultipartPut(ApiEndpoints.driverStep1, formData);
+    return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
+  });
 
   @override
   Future<DriverStepResponse> saveStep2(VehicleInput input) => _run(() async {
-        final formData = FormData.fromMap(input.toJson());
-        for (var i = 0; i < input.documents.length; i++) {
-          final document = input.documents[i];
-          formData.fields.add(MapEntry('documents[$i][type]', document.type));
-          formData.files.add(MapEntry(
+    final formData = FormData.fromMap(input.toJson());
+    for (var i = 0; i < input.documents.length; i++) {
+      final document = input.documents[i];
+      formData.fields.add(MapEntry('documents[$i][type]', document.type));
+      formData.files.add(
+        MapEntry(
+          'documents[$i][file_key]',
+          await MultipartFile.fromFile(document.filePath),
+        ),
+      );
+    }
+    final res = await _sendMultipartPut(ApiEndpoints.driverStep2, formData);
+    return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
+  });
+
+  @override
+  Future<DriverStepResponse> saveStep3(Map<DocType, String> filePaths) => _run(
+    () async {
+      final formData = FormData();
+      formData.fields.add(const MapEntry('_method', 'PUT'));
+      var i = 0;
+      for (final entry in filePaths.entries) {
+        formData.fields.add(MapEntry('documents[$i][type]', entry.key.apiKey));
+        formData.files.add(
+          MapEntry(
             'documents[$i][file_key]',
-            await MultipartFile.fromFile(document.filePath),
-          ));
-        }
-        final res = await _sendMultipartPut(ApiEndpoints.driverStep2, formData);
-        return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
-      });
-
-  @override
-  Future<DriverStepResponse> saveStep3(Map<DocType, String> filePaths) =>
-      _run(() async {
-        final formData = FormData();
-        formData.fields.add(const MapEntry('_method', 'PUT'));
-        for (final entry in filePaths.entries) {
-          formData.files.add(MapEntry(
-            'documents[${entry.key.apiKey}]',
             await MultipartFile.fromFile(entry.value),
-          ));
-          formData.files.add(MapEntry(
-            entry.key.apiKey,
-            await MultipartFile.fromFile(entry.value),
-          ));
-        }
-        final res = await _sendMultipartPut(ApiEndpoints.driverStep3, formData);
-        return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
-      });
-
-  @override
-  Future<DriverStepResponse> submit() => _run(() async {
-        final res = await _dio.post(ApiEndpoints.driverSubmit);
-        return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
-      });
+          ),
+        );
+        i++;
+      }
+      final res = await _sendMultipartPut(ApiEndpoints.driverStep3, formData);
+      return DriverStepResponse.fromJson(res.data as Map<String, dynamic>);
+    },
+  );
 
   @override
   Future<VerificationInfo> getStatus() => _run(() async {
-        final res = await _dio.get(ApiEndpoints.driverVerificationStatus);
-        return VerificationInfo.fromJson(res.data as Map<String, dynamic>);
-      });
+    final res = await _dio.get(ApiEndpoints.driverVerificationStatus);
+    return VerificationInfo.fromJson(res.data as Map<String, dynamic>);
+  });
 
   @override
   Future<void> replaceDocument(DocType type, String filePath) => _run(() async {
-        final formData = FormData.fromMap({
-          'file': await MultipartFile.fromFile(filePath),
-          'document': await MultipartFile.fromFile(filePath),
-        });
-        await _dio.post(
-          ApiEndpoints.driverDocument(type.apiKey),
-          data: formData,
-          options: Options(contentType: 'multipart/form-data'),
-        );
-      });
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath),
+      'document': await MultipartFile.fromFile(filePath),
+    });
+    await _dio.post(
+      ApiEndpoints.driverDocument(type.apiKey),
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+  });
 }
