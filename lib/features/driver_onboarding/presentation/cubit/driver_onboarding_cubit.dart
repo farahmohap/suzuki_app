@@ -13,7 +13,7 @@ export 'driver_onboarding_state.dart';
 @injectable
 class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
   DriverOnboardingCubit(this._repo, this._profileRepo)
-      : super(const DriverOnboardingInitialState());
+    : super(const DriverOnboardingInitialState());
 
   final DriverOnboardingRepository _repo;
   final ProfileRepository _profileRepo;
@@ -91,11 +91,13 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
       }
     }
 
-    emit(DriverOnboardingLoadedState(
-      step: statusInfo.nextStepIndex,
-      districts: districts,
-      docs: docs,
-    ));
+    emit(
+      DriverOnboardingLoadedState(
+        step: statusInfo.nextStepIndex,
+        districts: districts,
+        docs: docs,
+      ),
+    );
   }
 
   // ── navigation ──────────────────────────────────────────────────────────
@@ -134,38 +136,46 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
 
     final path = data.avatarPath;
     if (path == null || path.isEmpty) {
-      emit(DriverOnboardingSavePersonalFailureState(
-        errorMessage: 'الصورة الشخصية مطلوبة',
-        data: data,
-      ));
+      emit(
+        DriverOnboardingSavePersonalFailureState(
+          errorMessage: 'الصورة الشخصية مطلوبة',
+          data: data,
+        ),
+      );
       return;
     }
 
     emit(DriverOnboardingSavePersonalLoadingState(data: data));
 
-    final r = await _repo.saveStep1(PersonalInput(
-      fullName: fullName,
-      nationalId: nationalId,
-      birthDate: birthDate,
-      gender: gender,
-      avatarPath: path,
-      districtId: districtId,
-    ));
+    final r = await _repo.saveStep1(
+      PersonalInput(
+        fullName: fullName,
+        nationalId: nationalId,
+        birthDate: birthDate,
+        gender: gender,
+        avatarPath: path,
+        districtId: districtId,
+      ),
+    );
 
     r.fold(
-      (f) => emit(DriverOnboardingSavePersonalFailureState(
-        errorMessage: f.message,
-        data: data,
-      )),
+      (f) => emit(
+        DriverOnboardingSavePersonalFailureState(
+          errorMessage: f.message,
+          data: data,
+        ),
+      ),
       (stepResponse) {
         final nextStep = stepResponse.nextStepIndex > 0
             ? stepResponse.nextStepIndex
             : 1;
         final next = data.copyWith(step: nextStep);
-        emit(DriverOnboardingSavePersonalSuccessState(
-          data: next,
-          response: stepResponse,
-        ));
+        emit(
+          DriverOnboardingSavePersonalSuccessState(
+            data: next,
+            response: stepResponse,
+          ),
+        );
         emit(next);
       },
     );
@@ -188,11 +198,13 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
       return !slot.isUploaded || slot.localPath == 'existing';
     }).toList();
     if (missing.isNotEmpty) {
-      emit(DriverOnboardingSaveVehicleFailureState(
-        errorMessage:
-            'ارفع صور السيارة المطلوبة أولًا (${missing.map((type) => type.labelAr).join('، ')})',
-        data: data,
-      ));
+      emit(
+        DriverOnboardingSaveVehicleFailureState(
+          errorMessage:
+              'ارفع صور السيارة المطلوبة أولًا (${missing.map((type) => type.labelAr).join('، ')})',
+          data: data,
+        ),
+      );
       return;
     }
 
@@ -214,19 +226,23 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
 
     final r = await _repo.saveStep2(request);
     r.fold(
-      (f) => emit(DriverOnboardingSaveVehicleFailureState(
-        errorMessage: f.message,
-        data: data,
-      )),
+      (f) => emit(
+        DriverOnboardingSaveVehicleFailureState(
+          errorMessage: f.message,
+          data: data,
+        ),
+      ),
       (stepResponse) {
         final nextStep = stepResponse.nextStepIndex > 1
             ? stepResponse.nextStepIndex
             : 2;
         final next = data.copyWith(step: nextStep);
-        emit(DriverOnboardingSaveVehicleSuccessState(
-          data: next,
-          response: stepResponse,
-        ));
+        emit(
+          DriverOnboardingSaveVehicleSuccessState(
+            data: next,
+            response: stepResponse,
+          ),
+        );
         emit(next);
       },
     );
@@ -241,11 +257,7 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
 
     _setSlot(
       type,
-      DocSlot(
-        status: DocUploadStatus.uploaded,
-        localPath: path,
-        progress: 1,
-      ),
+      DocSlot(status: DocUploadStatus.uploaded, localPath: path, progress: 1),
     );
   }
 
@@ -269,14 +281,17 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
       DocType.vehicleLicense,
       DocType.criminalRecord,
     ];
-    final missing =
-        step3DocumentTypes.where((t) => !data.slot(t).isUploaded).toList();
+    final missing = step3DocumentTypes
+        .where((t) => !data.slot(t).isUploaded)
+        .toList();
     if (missing.isNotEmpty) {
-      emit(DriverOnboardingSubmitFailureState(
-        errorMessage:
-            'ارفع كل المستندات والصور المطلوبة أولًا (${missing.map((e) => e.labelAr).join("، ")})',
-        data: data,
-      ));
+      emit(
+        DriverOnboardingSubmitFailureState(
+          errorMessage:
+              'ارفع كل المستندات والصور المطلوبة أولًا (${missing.map((e) => e.labelAr).join("، ")})',
+          data: data,
+        ),
+      );
       return;
     }
 
@@ -288,13 +303,11 @@ class DriverOnboardingCubit extends Cubit<DriverOnboardingState> {
 
     final r = await _repo.saveDocumentsAndSubmit(filePaths);
     r.fold(
-      (f) => emit(DriverOnboardingSubmitFailureState(
-        errorMessage: f.message,
-        data: data,
-      )),
-      (stepResponse) => emit(DriverOnboardingSubmitSuccessState(
-        response: stepResponse,
-      )),
+      (f) => emit(
+        DriverOnboardingSubmitFailureState(errorMessage: f.message, data: data),
+      ),
+      (stepResponse) =>
+          emit(DriverOnboardingSubmitSuccessState(response: stepResponse)),
     );
   }
 }

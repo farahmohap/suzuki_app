@@ -20,10 +20,10 @@ class AuthInterceptor extends QueuedInterceptor {
     required Dio refreshDio,
     required TokenStorage tokens,
     required SessionEvents session,
-  })  : _api = apiDio,
-        _refreshDio = refreshDio,
-        _tokens = tokens,
-        _session = session;
+  }) : _api = apiDio,
+       _refreshDio = refreshDio,
+       _tokens = tokens,
+       _session = session;
 
   final Dio _api; // the Dio this interceptor is attached to (for retry)
   final Dio _refreshDio; // bare Dio, no interceptors (avoids refresh loops)
@@ -51,7 +51,9 @@ class AuthInterceptor extends QueuedInterceptor {
   ) async {
     final req = err.requestOptions;
     final is401 = err.response?.statusCode == 401;
-    if (!is401 || req.extra[kSkipAuth] == true || req.extra[_kRetried] == true) {
+    if (!is401 ||
+        req.extra[kSkipAuth] == true ||
+        req.extra[_kRetried] == true) {
       return handler.next(err);
     }
 
@@ -107,11 +109,13 @@ class AuthInterceptor extends QueuedInterceptor {
     } on DioException catch (e) {
       handler.next(e);
     } catch (error, stackTrace) {
-      handler.next(DioException(
-        requestOptions: retryOptions,
-        error: error,
-        stackTrace: stackTrace,
-      ));
+      handler.next(
+        DioException(
+          requestOptions: retryOptions,
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      );
     }
   }
 

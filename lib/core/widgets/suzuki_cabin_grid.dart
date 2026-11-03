@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../constants/app_colors.dart';
 
-enum SeatStatus {
-  available,
-  selected,
-  occupied,
-  cashLocked,
-}
+enum SeatStatus { available, selected, occupied, cashLocked }
 
 /// Interactive 7-passenger cabin seat map modeled directly after Egyptian Suzuki minivans.
 /// Front Row: Driver icon + Front Passenger Seat
@@ -158,7 +153,11 @@ class SuzukiCabinGrid extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.airline_seat_recline_normal, color: AppColors.grey600, size: 24.sp),
+          Icon(
+            Icons.airline_seat_recline_normal,
+            color: AppColors.grey600,
+            size: 24.sp,
+          ),
           SizedBox(height: 2.h),
           Text(
             'الكابتن',
@@ -227,7 +226,7 @@ class SuzukiCabinGrid extends StatelessWidget {
                     color: AppColors.stitchCobalt.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -271,10 +270,7 @@ class SuzukiCabinGrid extends StatelessWidget {
         Container(
           width: 8.w,
           height: 8.h,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         SizedBox(width: 4.w),
         Text(

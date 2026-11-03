@@ -59,11 +59,15 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     setState(() {
       if (_seatMap[seatNumber] == SeatStatus.selected) {
         _seatMap[seatNumber] = SeatStatus.available;
-        _selectedSeatCount = _seatMap.values.where((s) => s == SeatStatus.selected).length;
+        _selectedSeatCount = _seatMap.values
+            .where((s) => s == SeatStatus.selected)
+            .length;
         if (_selectedSeatCount == 0) _selectedSeatCount = 1;
       } else if (_seatMap[seatNumber] == SeatStatus.available) {
         _seatMap[seatNumber] = SeatStatus.selected;
-        _selectedSeatCount = _seatMap.values.where((s) => s == SeatStatus.selected).length;
+        _selectedSeatCount = _seatMap.values
+            .where((s) => s == SeatStatus.selected)
+            .length;
       }
     });
   }

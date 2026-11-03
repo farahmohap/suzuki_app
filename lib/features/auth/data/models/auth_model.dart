@@ -25,14 +25,14 @@ enum VerificationStatus {
   suspended;
 
   String get apiValue => switch (this) {
-        VerificationStatus.none => 'needs_profile',
-        VerificationStatus.draft => 'draft',
-        VerificationStatus.needsDocuments => 'needs_documents',
-        VerificationStatus.pending => 'pending_review',
-        VerificationStatus.approved => 'approved',
-        VerificationStatus.rejected => 'rejected',
-        VerificationStatus.suspended => 'suspended',
-      };
+    VerificationStatus.none => 'needs_profile',
+    VerificationStatus.draft => 'draft',
+    VerificationStatus.needsDocuments => 'needs_documents',
+    VerificationStatus.pending => 'pending_review',
+    VerificationStatus.approved => 'approved',
+    VerificationStatus.rejected => 'rejected',
+    VerificationStatus.suspended => 'suspended',
+  };
 
   static VerificationStatus fromString(String? s) {
     // The API's account lifecycle names differ from the driver's review
@@ -100,7 +100,11 @@ class AuthModel extends Equatable {
       phone: u['phone'] as String? ?? '',
       fullName: u['full_name'] as String?,
       avatarUrl: u['avatar_url'] as String?,
-      profileComplete: u['profile_complete'] as bool? ?? false,
+      profileComplete:
+          u['profile_complete'] as bool? ??
+          (u['status'] == 'active' ||
+              u['status'] == 'approved' ||
+              u['driver_status'] == 'active'),
       driverStatus: VerificationStatus.fromString(
         (u['status'] ?? u['driver_status'] ?? u['verification_status'])
             as String?,
@@ -109,34 +113,40 @@ class AuthModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': userId,
-        'role': role.apiValue,
-        'phone': phone,
-        'full_name': fullName,
-        'avatar_url': avatarUrl,
-        'profile_complete': profileComplete,
-        'driver_status': driverStatus.apiValue,
-      };
+    'id': userId,
+    'role': role.apiValue,
+    'phone': phone,
+    'full_name': fullName,
+    'avatar_url': avatarUrl,
+    'profile_complete': profileComplete,
+    'driver_status': driverStatus.apiValue,
+  };
 
   AuthModel copyWith({
     String? fullName,
     String? avatarUrl,
     bool? profileComplete,
     VerificationStatus? driverStatus,
-  }) =>
-      AuthModel(
-        userId: userId,
-        role: role,
-        phone: phone,
-        fullName: fullName ?? this.fullName,
-        avatarUrl: avatarUrl ?? this.avatarUrl,
-        profileComplete: profileComplete ?? this.profileComplete,
-        driverStatus: driverStatus ?? this.driverStatus,
-      );
+  }) => AuthModel(
+    userId: userId,
+    role: role,
+    phone: phone,
+    fullName: fullName ?? this.fullName,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+    profileComplete: profileComplete ?? this.profileComplete,
+    driverStatus: driverStatus ?? this.driverStatus,
+  );
 
   @override
-  List<Object?> get props =>
-      [userId, role, phone, fullName, avatarUrl, profileComplete, driverStatus];
+  List<Object?> get props => [
+    userId,
+    role,
+    phone,
+    fullName,
+    avatarUrl,
+    profileComplete,
+    driverStatus,
+  ];
 }
 
 /// Result of a successful OTP verification.

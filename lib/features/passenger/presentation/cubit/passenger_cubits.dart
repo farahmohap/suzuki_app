@@ -7,10 +7,9 @@ import 'passenger_states.dart';
 /// Manages seat booking and route browsing state directly with [PassengerRepository].
 @injectable
 class BookingCubit extends Cubit<BookingState> {
-  BookingCubit({
-    required PassengerRepository passengerRepository,
-  })  : _repo = passengerRepository,
-        super(const BookingInitial());
+  BookingCubit({required PassengerRepository passengerRepository})
+    : _repo = passengerRepository,
+      super(const BookingInitial());
 
   final PassengerRepository _repo;
 
@@ -36,7 +35,10 @@ class BookingCubit extends Cubit<BookingState> {
     required int seatNumber,
   }) async {
     emit(const BookingLoading());
-    final result = await _repo.bookSeat(routeId: routeId, seatNumber: seatNumber);
+    final result = await _repo.bookSeat(
+      routeId: routeId,
+      seatNumber: seatNumber,
+    );
     result.fold(
       (f) => emit(BookingError(f.message)),
       (booking) => emit(SeatBooked(booking)),
@@ -65,10 +67,9 @@ class BookingCubit extends Cubit<BookingState> {
 /// Manages saved landmark CRUD state directly with [PassengerRepository].
 @injectable
 class LandmarkCubit extends Cubit<LandmarkState> {
-  LandmarkCubit({
-    required PassengerRepository passengerRepository,
-  })  : _repo = passengerRepository,
-        super(const LandmarkInitial());
+  LandmarkCubit({required PassengerRepository passengerRepository})
+    : _repo = passengerRepository,
+      super(const LandmarkInitial());
 
   final PassengerRepository _repo;
 

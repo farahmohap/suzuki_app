@@ -12,8 +12,8 @@ class DriverRepositoryImpl implements DriverRepository {
   const DriverRepositoryImpl({
     required DriverRemoteDataSource remoteDataSource,
     required NetworkInfo networkInfo,
-  })  : _remote = remoteDataSource,
-        _network = networkInfo;
+  }) : _remote = remoteDataSource,
+       _network = networkInfo;
 
   final DriverRemoteDataSource _remote;
   final NetworkInfo _network;
@@ -24,8 +24,8 @@ class DriverRepositoryImpl implements DriverRepository {
 
   @override
   Future<Either<Failure, DriverStatusModel>> updateDriverStatus(
-          DriverStatus status) =>
-      _guard(() => _remote.updateDriverStatus(status));
+    DriverStatus status,
+  ) => _guard(() => _remote.updateDriverStatus(status));
 
   @override
   Future<Either<Failure, ActiveRouteModel?>> getActiveRoute() =>
@@ -36,17 +36,18 @@ class DriverRepositoryImpl implements DriverRepository {
     required String routeId,
     required int seatNumber,
     required bool isOccupied,
-  }) =>
-      _guard(() => _remote.updateSeatAvailability(
-            routeId: routeId,
-            seatNumber: seatNumber,
-            isOccupied: isOccupied,
-          ));
+  }) => _guard(
+    () => _remote.updateSeatAvailability(
+      routeId: routeId,
+      seatNumber: seatNumber,
+      isOccupied: isOccupied,
+    ),
+  );
 
   @override
-  Future<Either<Failure, EarningsModel>> getEarnings(
-          {String period = 'today'}) =>
-      _guard(() => _remote.getEarnings(period: period));
+  Future<Either<Failure, EarningsModel>> getEarnings({
+    String period = 'today',
+  }) => _guard(() => _remote.getEarnings(period: period));
 
   // ── Helper ──────────────────────────────────────────────────────────────
   Future<Either<Failure, T>> _guard<T>(Future<T> Function() fn) async {

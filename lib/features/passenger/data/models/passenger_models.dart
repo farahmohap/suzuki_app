@@ -127,10 +127,12 @@ class RouteModel extends Equatable {
     final orig = json['origin'] as Map<String, dynamic>? ?? {};
     final dest = json['destination'] as Map<String, dynamic>? ?? {};
     final waypointList = (json['waypoints'] as List<dynamic>? ?? [])
-        .map((w) => LatLng(
-              ((w as Map)['lat'] as num).toDouble(),
-              (w['lng'] as num).toDouble(),
-            ))
+        .map(
+          (w) => LatLng(
+            ((w as Map)['lat'] as num).toDouble(),
+            (w['lng'] as num).toDouble(),
+          ),
+        )
         .toList();
 
     return RouteModel(
@@ -149,8 +151,9 @@ class RouteModel extends Equatable {
       availableSeats: json['available_seats'] as int? ?? 0,
       totalSeats: json['total_seats'] as int? ?? 14,
       fare: (json['fare'] as num?)?.toDouble() ?? 0.0,
-      estimatedDuration:
-          Duration(minutes: json['duration_minutes'] as int? ?? 0),
+      estimatedDuration: Duration(
+        minutes: json['duration_minutes'] as int? ?? 0,
+      ),
       departureTime: json['departure_time'] != null
           ? DateTime.parse(json['departure_time'] as String)
           : DateTime.now(),
@@ -162,27 +165,24 @@ class RouteModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'route_id': routeId,
-        'name': name,
-        'origin': {'lat': origin.latitude, 'lng': origin.longitude},
-        'destination': {
-          'lat': destination.latitude,
-          'lng': destination.longitude
-        },
-        'origin_name': originName,
-        'destination_name': destinationName,
-        'available_seats': availableSeats,
-        'total_seats': totalSeats,
-        'fare': fare,
-        'duration_minutes': estimatedDuration.inMinutes,
-        'departure_time': departureTime.toIso8601String(),
-        'waypoints': waypoints
-            .map((w) => {'lat': w.latitude, 'lng': w.longitude})
-            .toList(),
-        'driver_name': driverName,
-        'vehicle_plate': vehiclePlate,
-        'distance_km': distanceKm,
-      };
+    'route_id': routeId,
+    'name': name,
+    'origin': {'lat': origin.latitude, 'lng': origin.longitude},
+    'destination': {'lat': destination.latitude, 'lng': destination.longitude},
+    'origin_name': originName,
+    'destination_name': destinationName,
+    'available_seats': availableSeats,
+    'total_seats': totalSeats,
+    'fare': fare,
+    'duration_minutes': estimatedDuration.inMinutes,
+    'departure_time': departureTime.toIso8601String(),
+    'waypoints': waypoints
+        .map((w) => {'lat': w.latitude, 'lng': w.longitude})
+        .toList(),
+    'driver_name': driverName,
+    'vehicle_plate': vehiclePlate,
+    'distance_km': distanceKm,
+  };
 
   RouteModel copyWith({
     String? routeId,
@@ -222,18 +222,18 @@ class RouteModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        routeId,
-        name,
-        origin,
-        destination,
-        originName,
-        destinationName,
-        availableSeats,
-        totalSeats,
-        fare,
-        estimatedDuration,
-        departureTime,
-      ];
+    routeId,
+    name,
+    origin,
+    destination,
+    originName,
+    destinationName,
+    availableSeats,
+    totalSeats,
+    fare,
+    estimatedDuration,
+    departureTime,
+  ];
 }
 
 // ── SeatBookingModel ─────────────────────────────────────────────────────────
@@ -297,32 +297,32 @@ class SeatBookingModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'booking_id': bookingId,
-        'route_id': routeId,
-        'passenger_id': passengerId,
-        'seat_number': seatNumber,
-        'status': status.name,
-        'booked_at': bookedAt.toIso8601String(),
-        'fare': fare,
-        'estimated_arrival': estimatedArrival?.toIso8601String(),
-        'driver_name': driverName,
-        'vehicle_plate': vehiclePlate,
-        if (currentDriverLocation != null)
-          'driver_location': {
-            'lat': currentDriverLocation!.latitude,
-            'lng': currentDriverLocation!.longitude,
-          },
-      };
+    'booking_id': bookingId,
+    'route_id': routeId,
+    'passenger_id': passengerId,
+    'seat_number': seatNumber,
+    'status': status.name,
+    'booked_at': bookedAt.toIso8601String(),
+    'fare': fare,
+    'estimated_arrival': estimatedArrival?.toIso8601String(),
+    'driver_name': driverName,
+    'vehicle_plate': vehiclePlate,
+    if (currentDriverLocation != null)
+      'driver_location': {
+        'lat': currentDriverLocation!.latitude,
+        'lng': currentDriverLocation!.longitude,
+      },
+  };
 
   @override
   List<Object?> get props => [
-        bookingId,
-        routeId,
-        passengerId,
-        seatNumber,
-        status,
-        bookedAt,
-      ];
+    bookingId,
+    routeId,
+    passengerId,
+    seatNumber,
+    status,
+    bookedAt,
+  ];
 }
 
 // ── LandmarkModel ─────────────────────────────────────────────────────────────
@@ -357,15 +357,12 @@ class LandmarkModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'location': {
-          'lat': location.latitude,
-          'lng': location.longitude,
-        },
-        'address': address,
-        'type': type.name,
-      };
+    'id': id,
+    'name': name,
+    'location': {'lat': location.latitude, 'lng': location.longitude},
+    'address': address,
+    'type': type.name,
+  };
 
   @override
   List<Object?> get props => [id, name, location, address, type];

@@ -27,12 +27,11 @@ class DocSlot extends Equatable {
     DocUploadStatus? status,
     String? localPath,
     double? progress,
-  }) =>
-      DocSlot(
-        status: status ?? this.status,
-        localPath: localPath ?? this.localPath,
-        progress: progress ?? this.progress,
-      );
+  }) => DocSlot(
+    status: status ?? this.status,
+    localPath: localPath ?? this.localPath,
+    progress: progress ?? this.progress,
+  );
 
   @override
   List<Object?> get props => [status, localPath, progress];
@@ -78,8 +77,7 @@ class DriverOnboardingLoadedState extends DriverOnboardingState {
 
   DocSlot slot(DocType t) => docs[t] ?? const DocSlot();
 
-  bool get allDocsUploaded =>
-      DocType.values.every((t) => slot(t).isUploaded);
+  bool get allDocsUploaded => DocType.values.every((t) => slot(t).isUploaded);
 
   bool get anyUploading =>
       docs.values.any((d) => d.status == DocUploadStatus.uploading);
@@ -89,13 +87,12 @@ class DriverOnboardingLoadedState extends DriverOnboardingState {
     List<DistrictModel>? districts,
     String? avatarPath,
     Map<DocType, DocSlot>? docs,
-  }) =>
-      DriverOnboardingLoadedState(
-        step: step ?? this.step,
-        districts: districts ?? this.districts,
-        avatarPath: avatarPath ?? this.avatarPath,
-        docs: docs ?? this.docs,
-      );
+  }) => DriverOnboardingLoadedState(
+    step: step ?? this.step,
+    districts: districts ?? this.districts,
+    avatarPath: avatarPath ?? this.avatarPath,
+    docs: docs ?? this.docs,
+  );
 
   @override
   List<Object?> get props => [step, districts, avatarPath, docs];

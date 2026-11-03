@@ -57,8 +57,12 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<bool> hasTokens() async {
-    final t = await _tokens.readAccess();
-    return t != null && t.isNotEmpty;
+    // A refresh token alone is enough to restore the session: the first
+    // authenticated request can renew a missing or expired access token.
+    final access = await _tokens.readAccess();
+    final refresh = await _tokens.readRefresh();
+    return (access != null && access.isNotEmpty) ||
+        (refresh != null && refresh.isNotEmpty);
   }
 
   @override

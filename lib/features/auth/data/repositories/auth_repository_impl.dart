@@ -73,7 +73,20 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthModel?> restoreSession() async {
     if (!await _local.hasTokens()) return null;
-    return _local.getCachedUser();
+
+    final cachedUser = await _local.getCachedUser();
+    try {
+      // Validate the stored session and get the latest role/status before the
+      // router leaves splash. AuthInterceptor refreshes an expired access token.
+      final user = await _remote.getMe();
+      await _local.cacheUser(user);
+      return user;
+    } catch (_) {
+      // Keep a cached session available during a temporary network outage.
+      // A rejected refresh clears token storage in AuthInterceptor.
+      if (await _local.hasTokens()) return cachedUser;
+      return null;
+    }
   }
 
   @override

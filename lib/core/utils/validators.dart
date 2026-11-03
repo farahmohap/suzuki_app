@@ -40,7 +40,8 @@ abstract final class AppValidators {
   static String? nationalId(String? value) {
     final v = toAsciiDigits(value ?? '').trim();
     if (v.isEmpty) return 'الرقم القومي مطلوب';
-    if (!RegExp(r'^\d{14}$').hasMatch(v)) return 'الرقم القومي يجب أن يكون 14 رقم';
+    if (!RegExp(r'^\d{14}$').hasMatch(v))
+      return 'الرقم القومي يجب أن يكون 14 رقم';
     return null;
   }
 
@@ -80,7 +81,8 @@ abstract final class AppValidators {
   /// Confirm password matches original.
   static String? Function(String?) confirmPassword(String original) {
     return (String? value) {
-      if (value == null || value.trim().isEmpty) return 'تأكيد كلمة المرور مطلوب';
+      if (value == null || value.trim().isEmpty)
+        return 'تأكيد كلمة المرور مطلوب';
       if (value != original) return 'كلمتا المرور غير متطابقتين';
       return null;
     };
@@ -109,10 +111,14 @@ abstract final class AppValidators {
   }
 
   /// Minimum character length.
-  static String? Function(String?) minLength(int min, {String label = 'الحقل'}) {
+  static String? Function(String?) minLength(
+    int min, {
+    String label = 'الحقل',
+  }) {
     return (String? value) {
       if (value == null || value.trim().isEmpty) return '$label مطلوب';
-      if (value.trim().length < min) return '$label يجب أن يكون $min أحرف على الأقل';
+      if (value.trim().length < min)
+        return '$label يجب أن يكون $min أحرف على الأقل';
       return null;
     };
   }

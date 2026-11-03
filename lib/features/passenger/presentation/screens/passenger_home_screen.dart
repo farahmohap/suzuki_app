@@ -126,7 +126,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                               ),
                               Row(
                                 children: [
-                                  Icon(Icons.location_on, size: 12.sp, color: AppColors.stitchAmber),
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 12.sp,
+                                    color: AppColors.stitchAmber,
+                                  ),
                                   SizedBox(width: 2.w),
                                   Text(
                                     '٦ أكتوبر • الشيخ زايد',
@@ -147,7 +151,10 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                         icon: const Badge(
                           smallSize: 8,
                           backgroundColor: AppColors.stitchAmber,
-                          child: Icon(Icons.notifications_none, color: AppColors.onSurface),
+                          child: Icon(
+                            Icons.notifications_none,
+                            color: AppColors.onSurface,
+                          ),
                         ),
                       ),
                     ],
@@ -182,7 +189,9 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                               ),
                               border: InputBorder.none,
                               isDense: true,
-                              contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 12.h,
+                              ),
                             ),
                           ),
                         ),
@@ -327,7 +336,10 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                 CircleAvatar(
                   radius: 22.r,
                   backgroundColor: AppColors.stitchCobaltLight,
-                  child: const Icon(Icons.person, color: AppColors.stitchCobalt),
+                  child: const Icon(
+                    Icons.person,
+                    color: AppColors.stitchCobalt,
+                  ),
                 ),
                 SizedBox(width: 10.w),
                 Expanded(
@@ -346,7 +358,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                             ),
                           ),
                           SizedBox(width: 4.w),
-                          const Icon(Icons.star, color: AppColors.stitchAmber, size: 12),
+                          const Icon(
+                            Icons.star,
+                            color: AppColors.stitchAmber,
+                            size: 12,
+                          ),
                           Text(
                             '4.9',
                             style: TextStyle(
@@ -380,7 +396,10 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.stitchCobalt,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 8.h,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.r),
                     ),

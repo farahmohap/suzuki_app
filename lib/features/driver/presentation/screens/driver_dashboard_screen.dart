@@ -56,10 +56,14 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 children: [
                   CircleAvatar(
                     radius: 24.r,
-                    backgroundColor: _isOnline ? AppColors.stitchTealLight : AppColors.grey200,
+                    backgroundColor: _isOnline
+                        ? AppColors.stitchTealLight
+                        : AppColors.grey200,
                     child: Icon(
                       _isOnline ? Icons.directions_bus : Icons.bus_alert,
-                      color: _isOnline ? AppColors.stitchTeal : AppColors.grey600,
+                      color: _isOnline
+                          ? AppColors.stitchTeal
+                          : AppColors.grey600,
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -68,7 +72,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _isOnline ? 'حالة السائق: جاهز للتحميل' : 'حالة السائق: أوفلاين',
+                          _isOnline
+                              ? 'حالة السائق: جاهز للتحميل'
+                              : 'حالة السائق: أوفلاين',
                           style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 14.sp,
@@ -77,7 +83,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                           ),
                         ),
                         Text(
-                          _isOnline ? 'متواجد في دور موقف الحصري' : 'قم بالتفعيل لبدء رحلات اليوم',
+                          _isOnline
+                              ? 'متواجد في دور موقف الحصري'
+                              : 'قم بالتفعيل لبدء رحلات اليوم',
                           style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 11.sp,
@@ -124,7 +132,10 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                   ),
                   SizedBox(height: 12.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.grey100,
                       borderRadius: BorderRadius.circular(10.r),
@@ -146,7 +157,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                           ),
                           DropdownMenuItem(
                             value: 'خط أول المدينة - محور الكفراوي',
-                            child: Text('خط أول المدينة - محور الكفراوي (٦ ج.م)'),
+                            child: Text(
+                              'خط أول المدينة - محور الكفراوي (٦ ج.م)',
+                            ),
                           ),
                         ],
                         onChanged: (val) {

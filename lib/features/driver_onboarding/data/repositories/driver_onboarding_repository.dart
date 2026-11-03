@@ -19,26 +19,18 @@ abstract class DriverOnboardingRepository {
 
   Future<Either<Failure, VerificationInfo>> getStatus();
 
-  Future<Either<Failure, Unit>> replaceDocument(
-    DocType type,
-    String filePath,
-  );
+  Future<Either<Failure, Unit>> replaceDocument(DocType type, String filePath);
 }
 
 @LazySingleton(as: DriverOnboardingRepository)
 class DriverOnboardingRepositoryImpl implements DriverOnboardingRepository {
-  const DriverOnboardingRepositoryImpl(
-    this._remote,
-    this._network,
-  );
+  const DriverOnboardingRepositoryImpl(this._remote, this._network);
 
   final DriverOnboardingRemoteDataSource _remote;
   final NetworkInfo _network;
 
   @override
-  Future<Either<Failure, DriverStepResponse>> saveStep1(
-    PersonalInput input,
-  ) =>
+  Future<Either<Failure, DriverStepResponse>> saveStep1(PersonalInput input) =>
       guardCall(_network, () => _remote.saveStep1(input));
 
   @override
@@ -48,8 +40,7 @@ class DriverOnboardingRepositoryImpl implements DriverOnboardingRepository {
   @override
   Future<Either<Failure, DriverStepResponse>> saveDocumentsAndSubmit(
     Map<DocType, String> filePaths,
-  ) =>
-      guardCall(_network, () => _remote.saveStep3(filePaths));
+  ) => guardCall(_network, () => _remote.saveStep3(filePaths));
 
   @override
   Future<Either<Failure, VerificationInfo>> getStatus() =>
@@ -59,9 +50,8 @@ class DriverOnboardingRepositoryImpl implements DriverOnboardingRepository {
   Future<Either<Failure, Unit>> replaceDocument(
     DocType type,
     String filePath,
-  ) =>
-      guardCall(_network, () async {
-        await _remote.replaceDocument(type, filePath);
-        return unit;
-      });
+  ) => guardCall(_network, () async {
+    await _remote.replaceDocument(type, filePath);
+    return unit;
+  });
 }

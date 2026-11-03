@@ -108,8 +108,7 @@ extension DioExceptionMapper on DioException {
             }
             return MapEntry(k.toString(), v.toString());
           });
-          if (fields != null &&
-              fields.isNotEmpty &&
+          if (fields.isNotEmpty &&
               (message == null ||
                   message == 'The given data was invalid.' ||
                   message.isEmpty)) {

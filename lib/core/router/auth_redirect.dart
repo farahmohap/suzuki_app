@@ -18,9 +18,7 @@ String? resolveRedirect({
   if (!resolved) return location == splash ? null : splash;
 
   if (user == null) {
-    return (location == login || location == otp)
-        ? null
-        : login;
+    return (location == login || location == otp) ? null : login;
   }
 
   final home = homeFor(user);
@@ -29,7 +27,8 @@ String? resolveRedirect({
   if (user.isDriver) {
     if (!location.startsWith('/driver')) return home;
     final approved = user.driverStatus == VerificationStatus.approved;
-    final inVerification = location.startsWith('/driver/onboarding') ||
+    final inVerification =
+        location.startsWith('/driver/onboarding') ||
         location.startsWith('/driver/status');
     if (!approved && !inVerification) return home;
     if (approved && inVerification) return home;

@@ -44,8 +44,9 @@ class _StatusView extends StatelessWidget {
           context.read<AuthCubit>().refreshUser();
         }
         if (state.error != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(state.error!)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.error!)));
         }
       },
       builder: (context, state) {
@@ -111,7 +112,8 @@ class _StatusView extends StatelessWidget {
             icon: Icons.hourglass_top_rounded,
             color: AppColors.primary,
             title: 'طلبك قيد المراجعة',
-            body: 'بنراجع مستنداتك. بعد الموافقة أحضر السوزوكي لموقف العبور '
+            body:
+                'بنراجع مستنداتك. بعد الموافقة أحضر السوزوكي لموقف العبور '
                 'لفحص السيارة، ثم يتم تفعيل حسابك.\nاسحب للأسفل للتحديث.',
           ),
         ];
@@ -149,7 +151,8 @@ class _StatusView extends StatelessWidget {
             icon: Icons.error_outline,
             color: AppColors.error,
             title: 'يلزم تعديل بعض المستندات',
-            body: info.rejectionReason ??
+            body:
+                info.rejectionReason ??
                 'ارفع المستندات المرفوضة من جديد وسنراجعها.',
           ),
           for (final d in rejected)
@@ -162,8 +165,9 @@ class _StatusView extends StatelessWidget {
                     ? DocUploadStatus.uploading
                     : DocUploadStatus.empty,
               ),
-              onPicked: (path) =>
-                  context.read<DriverStatusCubit>().replaceDocument(d.type, path),
+              onPicked: (path) => context
+                  .read<DriverStatusCubit>()
+                  .replaceDocument(d.type, path),
             ),
         ];
       case VerificationStatus.none:

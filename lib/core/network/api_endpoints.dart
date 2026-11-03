@@ -11,6 +11,7 @@ abstract final class ApiEndpoints {
   // ── Profile & shared (phase 2) ─────────────────────────────────────────────
   static const String me = '/users/me';
   static const String districts = '/districts';
+  static const String passengerRegister = '/passengers/register';
 
   // ── Driver onboarding (phase 2) ────────────────────────────────────────────
   static const String driverStep1 = '/drivers/register/step1';

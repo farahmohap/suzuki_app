@@ -40,7 +40,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
     _user = user;
     emit(AuthAuthenticated(user));
-    unawaited(refreshUser()); // silent refresh; fixes stale driver status
   }
 
   /// Returns null on success, or an Arabic error message.
@@ -97,8 +96,9 @@ class AuthCubit extends Cubit<AuthState> {
   /// Applies a user returned by profile/onboarding calls.
   Future<void> updateUser(AuthModel user) async {
     _user = user;
-    await _repo.cacheUser(user);
+    // Emit first so GoRouter can redirect immediately after registration.
     emit(AuthAuthenticated(user));
+    await _repo.cacheUser(user);
   }
 
   Future<void> logout() async {

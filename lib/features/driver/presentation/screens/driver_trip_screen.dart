@@ -6,7 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/osm_map_widget.dart';
 
 class DriverTripScreen extends StatefulWidget {
-  const DriverTripScreen({super.key,required this.tripId});
+  const DriverTripScreen({super.key, required this.tripId});
 
   final String tripId;
 
@@ -72,7 +72,10 @@ class _DriverTripScreenState extends State<DriverTripScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.payments_outlined, color: AppColors.stitchTeal),
+                              const Icon(
+                                Icons.payments_outlined,
+                                color: AppColors.stitchTeal,
+                              ),
                               SizedBox(width: 8.w),
                               Text(
                                 'إجمالي الأجرة المحصلة كاش:',
@@ -123,7 +126,9 @@ class _DriverTripScreenState extends State<DriverTripScreen> {
                     ElevatedButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تم إنهاء الرحلة بنجاح!')),
+                          const SnackBar(
+                            content: Text('تم إنهاء الرحلة بنجاح!'),
+                          ),
                         );
                         context.pop();
                       },

@@ -59,92 +59,121 @@ import '../storage/token_storage.dart' as _i973;
 import 'injection.dart' as _i464;
 
 extension GetItInjectableX on _i174.GetIt {
-// initializes the registration of main-scope dependencies inside of GetIt
+  // initializes the registration of main-scope dependencies inside of GetIt
   Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
   }) async {
-    final gh = _i526.GetItHelper(
-      this,
-      environment,
-      environmentFilter,
-    );
+    final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => registerModule.sharedPreferences,
       preResolve: true,
     );
     gh.lazySingleton<_i558.FlutterSecureStorage>(
-        () => registerModule.secureStorage);
+      () => registerModule.secureStorage,
+    );
     gh.lazySingleton<_i893.SessionEvents>(() => _i893.SessionEvents());
     gh.lazySingleton<_i932.NetworkInfo>(() => const _i932.NetworkInfoImpl());
     gh.lazySingleton<_i412.PassengerLocalDataSource>(
-        () => _i412.PassengerLocalDataSourceImpl());
+      () => _i412.PassengerLocalDataSourceImpl(),
+    );
     gh.lazySingleton<_i973.TokenStorage>(
-        () => _i973.SecureTokenStorage(gh<_i558.FlutterSecureStorage>()));
+      () => _i973.SecureTokenStorage(gh<_i558.FlutterSecureStorage>()),
+    );
     gh.lazySingleton<_i852.AuthLocalDataSource>(
-        () => _i852.AuthLocalDataSourceImpl(
-              gh<_i460.SharedPreferences>(),
-              gh<_i973.TokenStorage>(),
-            ));
+      () => _i852.AuthLocalDataSourceImpl(
+        gh<_i460.SharedPreferences>(),
+        gh<_i973.TokenStorage>(),
+      ),
+    );
     gh.lazySingleton<_i917.SocketService>(
-        () => _i917.SocketService(gh<_i973.TokenStorage>()));
-    gh.lazySingleton<_i361.Dio>(() => registerModule.dio(
-          gh<_i973.TokenStorage>(),
-          gh<_i893.SessionEvents>(),
-        ));
+      () => _i917.SocketService(gh<_i973.TokenStorage>()),
+    );
+    gh.lazySingleton<_i361.Dio>(
+      () => registerModule.dio(
+        gh<_i973.TokenStorage>(),
+        gh<_i893.SessionEvents>(),
+      ),
+    );
     gh.lazySingleton<_i923.DriverOnboardingRemoteDataSource>(
-        () => _i923.DriverOnboardingRemoteDataSourceImpl(gh<_i361.Dio>()));
+      () => _i923.DriverOnboardingRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i575.DriverRemoteDataSource>(
-        () => _i575.DriverRemoteDataSourceImpl(gh<_i361.Dio>()));
+      () => _i575.DriverRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
-        () => _i107.AuthRemoteDataSourceImpl(gh<_i361.Dio>()));
+      () => _i107.AuthRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i658.PassengerRemoteDataSource>(
-        () => _i658.PassengerRemoteDataSourceImpl(gh<_i361.Dio>()));
-    gh.lazySingleton<_i4.DriverRepository>(() => _i892.DriverRepositoryImpl(
-          remoteDataSource: gh<_i575.DriverRemoteDataSource>(),
-          networkInfo: gh<_i932.NetworkInfo>(),
-        ));
+      () => _i658.PassengerRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i4.DriverRepository>(
+      () => _i892.DriverRepositoryImpl(
+        remoteDataSource: gh<_i575.DriverRemoteDataSource>(),
+        networkInfo: gh<_i932.NetworkInfo>(),
+      ),
+    );
     gh.lazySingleton<_i847.ProfileRemoteDataSource>(
-        () => _i847.ProfileRemoteDataSourceImpl(gh<_i361.Dio>()));
-    gh.lazySingleton<_i573.AuthRepository>(() => _i153.AuthRepositoryImpl(
-          remoteDataSource: gh<_i107.AuthRemoteDataSource>(),
-          localDataSource: gh<_i852.AuthLocalDataSource>(),
-          networkInfo: gh<_i932.NetworkInfo>(),
-        ));
+      () => _i847.ProfileRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i573.AuthRepository>(
+      () => _i153.AuthRepositoryImpl(
+        remoteDataSource: gh<_i107.AuthRemoteDataSource>(),
+        localDataSource: gh<_i852.AuthLocalDataSource>(),
+        networkInfo: gh<_i932.NetworkInfo>(),
+      ),
+    );
     gh.lazySingleton<_i621.PassengerRepository>(
-        () => _i715.PassengerRepositoryImpl(
-              remoteDataSource: gh<_i658.PassengerRemoteDataSource>(),
-              localDataSource: gh<_i412.PassengerLocalDataSource>(),
-              networkInfo: gh<_i932.NetworkInfo>(),
-            ));
+      () => _i715.PassengerRepositoryImpl(
+        remoteDataSource: gh<_i658.PassengerRemoteDataSource>(),
+        localDataSource: gh<_i412.PassengerLocalDataSource>(),
+        networkInfo: gh<_i932.NetworkInfo>(),
+      ),
+    );
     gh.lazySingleton<_i647.DriverOnboardingRepository>(
-        () => _i647.DriverOnboardingRepositoryImpl(
-              gh<_i923.DriverOnboardingRemoteDataSource>(),
-              gh<_i932.NetworkInfo>(),
-            ));
-    gh.lazySingleton<_i361.ProfileRepository>(() => _i361.ProfileRepositoryImpl(
-          gh<_i847.ProfileRemoteDataSource>(),
-          gh<_i932.NetworkInfo>(),
-        ));
-    gh.factory<_i863.BookingCubit>(() => _i863.BookingCubit(
-        passengerRepository: gh<_i621.PassengerRepository>()));
-    gh.factory<_i863.LandmarkCubit>(() => _i863.LandmarkCubit(
-        passengerRepository: gh<_i621.PassengerRepository>()));
+      () => _i647.DriverOnboardingRepositoryImpl(
+        gh<_i923.DriverOnboardingRemoteDataSource>(),
+        gh<_i932.NetworkInfo>(),
+      ),
+    );
+    gh.lazySingleton<_i361.ProfileRepository>(
+      () => _i361.ProfileRepositoryImpl(
+        gh<_i847.ProfileRemoteDataSource>(),
+        gh<_i932.NetworkInfo>(),
+      ),
+    );
+    gh.factory<_i863.BookingCubit>(
+      () => _i863.BookingCubit(
+        passengerRepository: gh<_i621.PassengerRepository>(),
+      ),
+    );
+    gh.factory<_i863.LandmarkCubit>(
+      () => _i863.LandmarkCubit(
+        passengerRepository: gh<_i621.PassengerRepository>(),
+      ),
+    );
     gh.factory<_i727.DriverCubit>(
-        () => _i727.DriverCubit(driverRepository: gh<_i4.DriverRepository>()));
+      () => _i727.DriverCubit(driverRepository: gh<_i4.DriverRepository>()),
+    );
     gh.factory<_i36.ProfileCubit>(
-        () => _i36.ProfileCubit(gh<_i361.ProfileRepository>()));
-    gh.lazySingleton<_i117.AuthCubit>(() => _i117.AuthCubit(
-          gh<_i573.AuthRepository>(),
-          gh<_i893.SessionEvents>(),
-        ));
-    gh.factory<_i22.DriverOnboardingCubit>(() => _i22.DriverOnboardingCubit(
-          gh<_i647.DriverOnboardingRepository>(),
-          gh<_i361.ProfileRepository>(),
-        ));
+      () => _i36.ProfileCubit(gh<_i361.ProfileRepository>()),
+    );
+    gh.lazySingleton<_i117.AuthCubit>(
+      () => _i117.AuthCubit(
+        gh<_i573.AuthRepository>(),
+        gh<_i893.SessionEvents>(),
+      ),
+    );
+    gh.factory<_i22.DriverOnboardingCubit>(
+      () => _i22.DriverOnboardingCubit(
+        gh<_i647.DriverOnboardingRepository>(),
+        gh<_i361.ProfileRepository>(),
+      ),
+    );
     gh.factory<_i855.DriverStatusCubit>(
-        () => _i855.DriverStatusCubit(gh<_i647.DriverOnboardingRepository>()));
+      () => _i855.DriverStatusCubit(gh<_i647.DriverOnboardingRepository>()),
+    );
     return this;
   }
 }

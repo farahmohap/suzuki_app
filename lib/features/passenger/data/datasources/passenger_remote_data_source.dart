@@ -60,8 +60,7 @@ class PassengerRemoteDataSourceImpl implements PassengerRemoteDataSource {
         ApiEndpoints.bookSeat,
         data: {'route_id': routeId, 'seat_number': seatNumber},
       );
-      return SeatBookingModel.fromJson(
-          response.data as Map<String, dynamic>);
+      return SeatBookingModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw e.toAppException();
     }
@@ -72,8 +71,7 @@ class PassengerRemoteDataSourceImpl implements PassengerRemoteDataSource {
     try {
       final response = await _dio.get(ApiEndpoints.activeBooking);
       if (response.data == null) return null;
-      return SeatBookingModel.fromJson(
-          response.data as Map<String, dynamic>);
+      return SeatBookingModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return null;
       throw e.toAppException();

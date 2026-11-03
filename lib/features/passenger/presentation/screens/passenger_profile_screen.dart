@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/router/app_routes.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 
 class PassengerProfileScreen extends StatelessWidget {
   const PassengerProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthCubit>().currentUser;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -45,7 +47,11 @@ class PassengerProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 30.r,
                     backgroundColor: AppColors.stitchCobaltLight,
-                    child: Icon(Icons.person, size: 36.sp, color: AppColors.stitchCobalt),
+                    child: Icon(
+                      Icons.person,
+                      size: 36.sp,
+                      color: AppColors.stitchCobalt,
+                    ),
                   ),
                   SizedBox(width: 14.w),
                   Expanded(
@@ -53,7 +59,7 @@ class PassengerProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'أحمد فتحي',
+                          user?.fullName ?? 'الراكب',
                           style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 16.sp,
@@ -62,7 +68,9 @@ class PassengerProfileScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '01012345678',
+                          user?.phone ?? '',
+                          textDirection: TextDirection.ltr,
+                          textAlign: TextAlign.right,
                           style: TextStyle(
                             fontFamily: 'Cairo',
                             fontSize: 12.sp,
@@ -71,13 +79,18 @@ class PassengerProfileScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.stitchTealLight,
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
-                            'راكب موثق • حساب مفعل',
+                            user?.profileComplete == true
+                                ? 'حساب راكب مفعل'
+                                : 'حساب راكب',
                             style: TextStyle(
                               fontFamily: 'Cairo',
                               fontSize: 10.sp,
@@ -130,35 +143,10 @@ class PassengerProfileScreen extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
 
-            // Logout / Switch Mode
-            OutlinedButton.icon(
-              onPressed: () {
-                context.goNamed(AppRoute.driverDashboard.name);
-              },
-              icon: const Icon(Icons.airport_shuttle, color: AppColors.stitchCobalt),
-              label: Text(
-                'التبديل إلى وضع السائق',
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.stitchCobalt,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.stitchCobalt),
-                minimumSize: Size(double.infinity, 48.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 10.h),
-
+            // Role switching requires a separate authenticated role flow;
+            // routing a passenger directly into the driver shell is invalid.
             TextButton.icon(
-              onPressed: () {
-                context.goNamed(AppRoute.login.name);
-              },
+              onPressed: () => context.read<AuthCubit>().logout(),
               icon: const Icon(Icons.logout, color: AppColors.error),
               label: Text(
                 'تسجيل الخروج',

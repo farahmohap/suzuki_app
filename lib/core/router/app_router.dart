@@ -60,10 +60,9 @@ GoRouter createAppRouter(AuthCubit auth) {
       ),
       GoRoute(
         path: AppRoute.passengerShell.path,
-        redirect: (_, state) =>
-            state.uri.path == AppRoute.passengerShell.path
-                ? AppRoute.passengerHome.fullPath
-                : null,
+        redirect: (_, state) => state.uri.path == AppRoute.passengerShell.path
+            ? AppRoute.passengerHome.fullPath
+            : null,
         routes: [
           GoRoute(
             path: AppRoute.passengerHome.path,
@@ -92,10 +91,9 @@ GoRouter createAppRouter(AuthCubit auth) {
       ),
       GoRoute(
         path: AppRoute.driverShell.path,
-        redirect: (_, state) =>
-            state.uri.path == AppRoute.driverShell.path
-                ? AppRoute.driverDashboard.fullPath
-                : null,
+        redirect: (_, state) => state.uri.path == AppRoute.driverShell.path
+            ? AppRoute.driverDashboard.fullPath
+            : null,
         routes: [
           GoRoute(
             path: AppRoute.driverOnboarding.path,

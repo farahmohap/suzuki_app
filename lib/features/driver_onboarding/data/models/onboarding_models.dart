@@ -52,16 +52,22 @@ class PersonalInput extends Equatable {
       '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
 
   Map<String, dynamic> toJson() => {
-        'full_name': fullName,
-        'national_id': nationalId,
-        'birth_date': birthDateFormatted,
-        'gender': gender.apiValue,
-        'district_id': districtId,
-      };
+    'full_name': fullName,
+    'national_id': nationalId,
+    'birth_date': birthDateFormatted,
+    'gender': gender.apiValue,
+    'district_id': districtId,
+  };
 
   @override
-  List<Object?> get props =>
-      [fullName, nationalId, birthDate, gender, avatarPath, districtId];
+  List<Object?> get props => [
+    fullName,
+    nationalId,
+    birthDate,
+    gender,
+    avatarPath,
+    districtId,
+  ];
 }
 
 class VehicleInput extends Equatable {
@@ -83,22 +89,25 @@ class VehicleInput extends Equatable {
   final List<DriverDocumentInput> documents;
 
   Map<String, dynamic> toJson() => {
-        'plate_numbers': plateNumbers,
-        'plate_letters': plateLetters,
-        'model': model,
-        'color': color,
-      };
+    'plate_numbers': plateNumbers,
+    'plate_letters': plateLetters,
+    'model': model,
+    'color': color,
+  };
 
   @override
-  List<Object?> get props => [plateNumbers, plateLetters, model, color, documents];
+  List<Object?> get props => [
+    plateNumbers,
+    plateLetters,
+    model,
+    color,
+    documents,
+  ];
 }
 
 /// A vehicle document file sent as multipart data in the step 2 request.
 class DriverDocumentInput extends Equatable {
-  const DriverDocumentInput({
-    required this.type,
-    required this.filePath,
-  });
+  const DriverDocumentInput({required this.type, required this.filePath});
 
   final String type;
   final String filePath;
@@ -165,11 +174,14 @@ class DriverStepResponse extends Equatable {
         if (item is Map) {
           final type = DocType.fromApi(item['type']?.toString());
           if (type == null) continue;
-          docs.add(DocumentReview(
-            type: type,
-            status: (item['status'] ?? 'missing').toString(),
-            rejectReason: (item['reject_reason'] ?? item['reason'])?.toString(),
-          ));
+          docs.add(
+            DocumentReview(
+              type: type,
+              status: (item['status'] ?? 'missing').toString(),
+              rejectReason: (item['reject_reason'] ?? item['reason'])
+                  ?.toString(),
+            ),
+          );
         }
       }
     }
@@ -217,16 +229,17 @@ class DriverStepResponse extends Equatable {
       return 0;
     }
 
-    final parsedFromNext =
-        parseStep(body['next_step'] ?? body['onboarding_step']);
+    final parsedFromNext = parseStep(
+      body['next_step'] ?? body['onboarding_step'],
+    );
 
     final int onboardingStep = parsedFromNext > 0
         ? parsedFromNext
         : completedSteps.contains(2)
-            ? 3
-            : completedSteps.contains(1)
-                ? 2
-                : (status == VerificationStatus.needsDocuments ? 3 : 1);
+        ? 3
+        : completedSteps.contains(1)
+        ? 2
+        : (status == VerificationStatus.needsDocuments ? 3 : 1);
 
     return DriverStepResponse(
       status: status,
@@ -240,22 +253,22 @@ class DriverStepResponse extends Equatable {
   }
 
   VerificationInfo toVerificationInfo() => VerificationInfo(
-        status: status,
-        onboardingStep: onboardingStep,
-        completedSteps: completedSteps,
-        rejectionReason: rejectionReason,
-        documents: documents,
-      );
+    status: status,
+    onboardingStep: onboardingStep,
+    completedSteps: completedSteps,
+    rejectionReason: rejectionReason,
+    documents: documents,
+  );
 
   @override
   List<Object?> get props => [
-        status,
-        message,
-        onboardingStep,
-        completedSteps,
-        rejectionReason,
-        documents,
-      ];
+    status,
+    message,
+    onboardingStep,
+    completedSteps,
+    rejectionReason,
+    documents,
+  ];
 }
 
 /// `GET /drivers/me/status`.
@@ -284,10 +297,10 @@ class VerificationInfo extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        onboardingStep,
-        completedSteps,
-        rejectionReason,
-        documents,
-      ];
+    status,
+    onboardingStep,
+    completedSteps,
+    rejectionReason,
+    documents,
+  ];
 }

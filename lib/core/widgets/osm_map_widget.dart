@@ -89,117 +89,133 @@ class OsmMapWidget extends StatelessWidget {
                 MarkerLayer(
                   markers: [
                     // Station markers
-                    ...stations.map((s) => Marker(
-                          point: s.point,
-                          width: 120,
-                          height: 48,
-                          child: GestureDetector(
-                            onTap: () => onStationTap?.call(s),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: s.isHub ? AppColors.stitchCobalt : AppColors.stitchTeal,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        s.isHub ? Icons.hub : Icons.pin_drop,
-                                        color: Colors.white,
-                                        size: 12,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Flexible(
-                                        child: Text(
-                                          s.title,
-                                          style: const TextStyle(
-                                            fontFamily: 'Cairo',
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                    ...stations.map(
+                      (s) => Marker(
+                        point: s.point,
+                        width: 120,
+                        height: 48,
+                        child: GestureDetector(
+                          onTap: () => onStationTap?.call(s),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: s.isHub
+                                      ? AppColors.stitchCobalt
+                                      : AppColors.stitchTeal,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      s.isHub ? Icons.hub : Icons.pin_drop,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        s.title,
+                                        style: const TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                Container(
-                                  width: 2,
-                                  height: 6,
-                                  color: s.isHub ? AppColors.stitchCobalt : AppColors.stitchTeal,
-                                ),
-                              ],
-                            ),
+                              ),
+                              Container(
+                                width: 2,
+                                height: 6,
+                                color: s.isHub
+                                    ? AppColors.stitchCobalt
+                                    : AppColors.stitchTeal,
+                              ),
+                            ],
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
 
                     // Van markers
-                    ...vans.map((v) => Marker(
-                          point: v.point,
-                          width: 50,
-                          height: 50,
-                          child: GestureDetector(
-                            onTap: () => onVanTap?.call(v),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.stitchCobalt,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.stitchCobalt.withOpacity(0.35),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.airport_shuttle,
+                    ...vans.map(
+                      (v) => Marker(
+                        point: v.point,
+                        width: 50,
+                        height: 50,
+                        child: GestureDetector(
+                          onTap: () => onVanTap?.call(v),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.stitchCobalt,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
                                     color: Colors.white,
-                                    size: 22,
+                                    width: 2,
                                   ),
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.stitchAmber,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      '${v.availableSeats}',
-                                      style: const TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.stitchCobalt.withOpacity(
+                                        0.35,
                                       ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.airport_shuttle,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.stitchAmber,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${v.availableSeats}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],

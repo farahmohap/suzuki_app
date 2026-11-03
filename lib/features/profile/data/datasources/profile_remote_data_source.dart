@@ -22,10 +22,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<List<DistrictModel>> getDistricts() async {
     try {
       final res = await _dio.get(ApiEndpoints.districts);
-      return unwrapList(res.data)
-          .whereType<Map>()
-          .map((m) => DistrictModel.fromJson(m))
-          .toList();
+      return unwrapList(
+        res.data,
+      ).whereType<Map>().map((m) => DistrictModel.fromJson(m)).toList();
     } on DioException catch (e) {
       throw e.toAppException();
     }
@@ -34,8 +33,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<AuthModel> savePassengerProfile(PassengerProfileInput input) async {
     try {
-      final res = await _dio.put(ApiEndpoints.me, data: input.toJson());
-      return AuthModel.fromJson(res.data as Map<String, dynamic>);
+      await _dio.post(ApiEndpoints.passengerRegister, data: input.toJson());
+      final me = await _dio.get(ApiEndpoints.me);
+      // A successful registration means this passenger has completed the
+      // profile, even if /users/me omits or briefly returns a stale flag.
+      return AuthModel.fromJson(
+        me.data as Map<String, dynamic>,
+      ).copyWith(profileComplete: true);
     } on DioException catch (e) {
       throw e.toAppException();
     }

@@ -87,8 +87,10 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.grey50,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.grey200),
@@ -121,9 +123,7 @@ abstract final class AppTheme {
         color: AppColors.surface,
         elevation: 2,
         shadowColor: AppColors.cardShadow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
       ),
 
@@ -133,9 +133,7 @@ abstract final class AppTheme {
         selectedColor: AppColors.primaryLight.withOpacity(0.15),
         labelStyle: AppTextStyles.labelMedium,
         side: const BorderSide(color: AppColors.grey200),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       ),
 
@@ -162,16 +160,15 @@ abstract final class AppTheme {
         backgroundColor: AppColors.amber,
         foregroundColor: AppColors.onAmber,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       // ── SnackBar ───────────────────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.grey900,
-        contentTextStyle:
-            AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: Colors.white,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         behavior: SnackBarBehavior.floating,
       ),

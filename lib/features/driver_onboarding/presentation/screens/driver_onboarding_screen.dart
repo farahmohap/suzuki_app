@@ -4,11 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:suzuki_app/core/constants/app_colors.dart';
 import 'package:suzuki_app/core/di/injection.dart';
-import 'package:suzuki_app/core/router/app_routes.dart';
 import 'package:suzuki_app/core/utils/validators.dart';
 import 'package:suzuki_app/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:suzuki_app/features/driver_onboarding/data/models/onboarding_models.dart';
@@ -127,8 +125,9 @@ class _WizardViewState extends State<_WizardView> {
     return BlocConsumer<DriverOnboardingCubit, DriverOnboardingState>(
       listener: (context, state) {
         if (state is DriverOnboardingSubmitSuccessState) {
+          // Refreshing auth state lets the central router redirect according
+          // to the status returned by /me, without leaving a stale back stack.
           context.read<AuthCubit>().refreshUser();
-          context.go(AppRoute.driverStatus.fullPath);
         }
         final error = _errorOf(state);
         if (error != null) {
@@ -227,10 +226,7 @@ class _WizardViewState extends State<_WizardView> {
               icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
               onPressed: context.read<DriverOnboardingCubit>().back,
             )
-          : IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-              onPressed: () => Navigator.maybePop(context),
-            ),
+          : const SizedBox.shrink(),
       title: Text(
         'تسجيل سائق جديد',
         style: TextStyle(
