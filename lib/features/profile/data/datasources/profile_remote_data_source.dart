@@ -23,8 +23,8 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       final res = await _dio.get(ApiEndpoints.districts);
       return unwrapList(res.data)
-          .whereType<Map<String, dynamic>>()
-          .map(DistrictModel.fromJson)
+          .whereType<Map>()
+          .map((m) => DistrictModel.fromJson(m))
           .toList();
     } on DioException catch (e) {
       throw e.toAppException();

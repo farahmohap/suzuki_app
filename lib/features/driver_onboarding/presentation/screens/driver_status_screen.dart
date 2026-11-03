@@ -7,7 +7,7 @@ import '../../../auth/data/models/auth_model.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../profile/presentation/cubit/profile_cubit.dart' show LoadStatus;
 import '../../data/models/onboarding_models.dart';
-import '../cubit/driver_onboarding_cubit.dart' show DocSlot, DocUploadStatus;
+import '../cubit/driver_onboarding_state.dart' show DocSlot, DocUploadStatus;
 import '../cubit/driver_status_cubit.dart';
 import '../widgets/document_tile.dart';
 
