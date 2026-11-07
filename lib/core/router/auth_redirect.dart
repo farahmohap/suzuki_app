@@ -23,9 +23,7 @@ String? resolveRedirect({
     return (location == login || location == otp) ? null : login;
   }
 
-  final home = user.isPassenger && isNewUser == false
-      ? '/passenger/home'
-      : homeFor(user);
+  final home = homeFor(user);
   if (location == splash || location == login || location == otp) {
     if (user.isPassenger && isNewUser == true) return register;
     return home;
@@ -51,10 +49,8 @@ String? resolveRedirect({
 
   // Passenger
   if (location.startsWith('/driver')) return home;
-  if (isNewUser == false) return location == register ? home : null;
   if (isNewUser == true) return location == register ? null : register;
-  if (!user.profileComplete && location != register) return register;
-  if (user.profileComplete && location == register) return home;
+  if (location == register) return home;
   return null;
 }
 
@@ -74,5 +70,5 @@ String homeFor(AuthModel user) {
         return '/driver/status';
     }
   }
-  return user.profileComplete ? '/passenger/home' : '/register';
+  return '/passenger/home';
 }
