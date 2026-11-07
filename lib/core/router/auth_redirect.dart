@@ -5,10 +5,12 @@ import '../../features/auth/data/models/auth_model.dart';
 /// [resolved]: the stored session has been checked at least once.
 /// [user]: signed-in user, or null.
 /// [location]: the location being navigated to.
+/// [isNewUser]: the transient OTP result; passenger onboarding signal only.
 String? resolveRedirect({
   required bool resolved,
   required AuthModel? user,
   required String location,
+  bool? isNewUser,
 }) {
   const splash = '/';
   const login = '/login';
@@ -21,8 +23,13 @@ String? resolveRedirect({
     return (location == login || location == otp) ? null : login;
   }
 
-  final home = homeFor(user);
-  if (location == splash || location == login || location == otp) return home;
+  final home = user.isPassenger && isNewUser == false
+      ? '/passenger/home'
+      : homeFor(user);
+  if (location == splash || location == login || location == otp) {
+    if (user.isPassenger && isNewUser == true) return register;
+    return home;
+  }
 
   if (user.isDriver) {
     if (!location.startsWith('/driver')) return home;
@@ -44,6 +51,8 @@ String? resolveRedirect({
 
   // Passenger
   if (location.startsWith('/driver')) return home;
+  if (isNewUser == false) return location == register ? home : null;
+  if (isNewUser == true) return location == register ? null : register;
   if (!user.profileComplete && location != register) return register;
   if (user.profileComplete && location == register) return home;
   return null;

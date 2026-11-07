@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
@@ -388,9 +387,9 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    context.pushNamed(
-                      AppRoute.seatBooking.name,
-                      pathParameters: {'routeId': 'route_october_101'},
+                    Navigator.of(context).pushNamed(
+                      RoutesName.seatBookingScreen,
+                      arguments: {'routeId': 'route_october_101'},
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -462,9 +461,9 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  context.pushNamed(
-                    AppRoute.seatBooking.name,
-                    pathParameters: {'routeId': van.id},
+                  Navigator.of(context).pushNamed(
+                    RoutesName.seatBookingScreen,
+                    arguments: {'routeId': van.id},
                   );
                 },
                 style: ElevatedButton.styleFrom(

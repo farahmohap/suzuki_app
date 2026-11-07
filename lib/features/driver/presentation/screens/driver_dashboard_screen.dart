@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/egyptian_license_plate.dart';
@@ -31,7 +30,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             icon: const Icon(Icons.person_outline),
             onPressed: () {
               // Navigate to Driver Profile / Switch back to passenger
-              context.goNamed(AppRoute.passengerHome.name);
+              Navigator.of(context).pushNamed(RoutesName.passengerHomeScreen);
             },
           ),
         ],
@@ -243,9 +242,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ElevatedButton.icon(
               onPressed: _isOnline
                   ? () {
-                      context.pushNamed(
-                        AppRoute.driverTrip.name,
-                        pathParameters: {'tripId': 'trip_active_909'},
+                      Navigator.of(context).pushNamed(
+                        RoutesName.driverTripScreen,
+                        arguments: {'tripId': 'trip_active_909'},
                       );
                     }
                   : null,

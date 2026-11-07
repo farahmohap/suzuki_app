@@ -90,7 +90,7 @@ class _PassengerRegistrationFormState
     listenWhen: (a, b) => a.saveStatus != b.saveStatus,
     listener: (context, state) {
       if (state.saveStatus == LoadStatus.success && state.savedUser != null) {
-        context.read<AuthCubit>().updateUser(state.savedUser!);
+        context.read<AuthCubit>().updateUserFromMe(state.savedUser!);
       } else if (state.saveStatus == LoadStatus.failure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(state.error ?? 'تعذّر حفظ البيانات')),

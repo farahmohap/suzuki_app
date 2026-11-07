@@ -163,6 +163,13 @@ class AuthSession extends Equatable {
   final String refreshToken;
   final bool isNewUser;
 
+  AuthSession withUser(AuthModel user) => AuthSession(
+    user: user,
+    accessToken: accessToken,
+    refreshToken: refreshToken,
+    isNewUser: isNewUser,
+  );
+
   factory AuthSession.fromJson(Map<String, dynamic> json) {
     final body = unwrapData(json);
     return AuthSession(

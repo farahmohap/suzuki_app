@@ -124,7 +124,9 @@ class _WizardViewState extends State<_WizardView> {
   Widget build(BuildContext context) {
     return BlocConsumer<DriverOnboardingCubit, DriverOnboardingState>(
       listener: (context, state) {
-        if (state is DriverOnboardingSubmitSuccessState) {
+        if (state is DriverOnboardingSavePersonalSuccessState ||
+            state is DriverOnboardingSaveVehicleSuccessState ||
+            state is DriverOnboardingSubmitSuccessState) {
           // Refreshing auth state lets the central router redirect according
           // to the status returned by /me, without leaving a stale back stack.
           context.read<AuthCubit>().refreshUser();

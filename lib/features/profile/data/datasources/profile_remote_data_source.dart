@@ -35,11 +35,8 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       await _dio.post(ApiEndpoints.passengerRegister, data: input.toJson());
       final me = await _dio.get(ApiEndpoints.me);
-      // A successful registration means this passenger has completed the
-      // profile, even if /users/me omits or briefly returns a stale flag.
-      return AuthModel.fromJson(
-        me.data as Map<String, dynamic>,
-      ).copyWith(profileComplete: true);
+      // User identity and completion state come exclusively from /me.
+      return AuthModel.fromJson(me.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw e.toAppException();
     }

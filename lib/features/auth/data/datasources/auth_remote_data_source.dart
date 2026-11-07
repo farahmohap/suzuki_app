@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/network/api_endpoints.dart';
@@ -64,8 +65,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<AuthModel> getMe() async {
     try {
       final res = await _dio.get(ApiEndpoints.me);
+      debugPrint('/users/me status=${res.statusCode}');
       return AuthModel.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
+      debugPrint('/users/me status=${e.response?.statusCode}');
       throw e.toAppException();
     }
   }

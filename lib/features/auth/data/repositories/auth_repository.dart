@@ -10,7 +10,7 @@ abstract class AuthRepository {
     required UserRole role,
   });
 
-  /// Verifies the OTP, stores tokens securely and caches the user.
+  /// Verifies OTP, stores tokens securely, then loads the user from /me.
   Future<Either<Failure, AuthSession>> verifyOtp({
     required String phone,
     required String code,
@@ -22,9 +22,6 @@ abstract class AuthRepository {
   /// Revokes the refresh token (best effort) and clears local session.
   Future<void> logout();
 
-  /// Signed-in user from local storage, or null.
-  Future<AuthModel?> restoreSession();
-
-  /// Persists an updated user snapshot (after profile/onboarding changes).
-  Future<void> cacheUser(AuthModel user);
+  /// Restores a session from secure tokens and GET /users/me.
+  Future<Either<Failure, AuthModel?>> restoreSession();
 }

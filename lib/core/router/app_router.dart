@@ -1,4 +1,4 @@
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -16,113 +16,160 @@ import '../../features/passenger/presentation/screens/seat_booking_screen.dart';
 import '../../features/profile/presentation/screens/passenger_profile_setup_screen.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
-import 'go_router_refresh_stream.dart';
+import 'routing_animation.dart';
 
-/// Builds the app router. Redirects are driven by [auth] (see
-/// [resolveRedirect]); identity travels in path params, not `extra`,
-/// except the transient OTP screen arguments.
-GoRouter createAppRouter(AuthCubit auth) {
-  return GoRouter(
-    initialLocation: AppRoute.splash.path,
-    refreshListenable: GoRouterRefreshStream(auth.stream),
-    redirect: (context, state) => resolveRedirect(
-      resolved: auth.isResolved,
-      user: auth.currentUser,
-      location: state.matchedLocation,
-    ),
-    routes: [
-      GoRoute(
-        path: AppRoute.splash.path,
-        name: AppRoute.splash.routeName,
-        builder: (_, _) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: AppRoute.login.path,
-        name: AppRoute.login.routeName,
-        builder: (_, _) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoute.otp.path,
-        name: AppRoute.otp.routeName,
-        builder: (_, state) {
-          final extra = state.extra as Map<String, dynamic>? ?? {};
-          return OtpVerificationScreen(
-            phoneNumber: extra['phone'] as String? ?? '',
-            isDriver: extra['isDriver'] as bool? ?? false,
+class AppRouters {
+  AppRouters._();
+
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+  static final RouteObserver<PageRoute<dynamic>> routeObserver =
+      RouteObserver<PageRoute<dynamic>>();
+  static final _currentRouteObserver = _CurrentRouteObserver();
+  static AuthCubit? _auth;
+
+  static void configure(AuthCubit auth) => _auth = auth;
+
+  static String? get currentRouteName => _currentRouteObserver.currentRouteName;
+
+  static List<NavigatorObserver> get observers => [
+    routeObserver,
+    _currentRouteObserver,
+  ];
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    final auth = _auth;
+    final redirect = auth == null
+        ? null
+        : resolveRedirect(
+            resolved: auth.isResolved,
+            user: auth.currentUser,
+            location: settings.name ?? RoutesName.splashScreen,
+            isNewUser: auth.isNewUser,
           );
-        },
-      ),
-      // Passenger profile setup (first login). Guarded by resolveRedirect.
-      GoRoute(
-        path: AppRoute.register.path,
-        name: AppRoute.register.routeName,
-        builder: (_, _) => const PassengerProfileSetupScreen(),
-      ),
-      GoRoute(
-        path: AppRoute.passengerShell.path,
-        redirect: (_, state) => state.uri.path == AppRoute.passengerShell.path
-            ? AppRoute.passengerHome.fullPath
-            : null,
-        routes: [
-          GoRoute(
-            path: AppRoute.passengerHome.path,
-            name: AppRoute.passengerHome.routeName,
-            builder: (_, _) => const PassengerHomeScreen(),
+    if (redirect != null && redirect != settings.name) {
+      return onGenerateRoute(RouteSettings(name: redirect));
+    }
+
+    final args = settings.arguments;
+    switch (settings.name) {
+      case RoutesName.splashScreen:
+        return buildRoute(page: const SplashScreen(), settings: settings);
+      case RoutesName.loginScreen:
+        return buildRoute(page: const LoginScreen(), settings: settings);
+      case RoutesName.otpScreen:
+        final arguments = args is Map ? args : const {};
+        return buildRoute(
+          page: OtpVerificationScreen(
+            phoneNumber: arguments['phone'] as String? ?? '',
+            isDriver: arguments['isDriver'] as bool? ?? false,
           ),
-          GoRoute(
-            path: AppRoute.seatBooking.path,
-            name: AppRoute.seatBooking.routeName,
-            builder: (_, state) =>
-                SeatBookingScreen(routeId: state.pathParameters['routeId']!),
-          ),
-          GoRoute(
-            path: AppRoute.activeTracking.path,
-            name: AppRoute.activeTracking.routeName,
-            builder: (_, state) => ActiveTrackingScreen(
-              bookingId: state.pathParameters['bookingId']!,
-            ),
-          ),
-          GoRoute(
-            path: AppRoute.passengerProfile.path,
-            name: AppRoute.passengerProfile.routeName,
-            builder: (_, _) => const PassengerProfileScreen(),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: AppRoute.driverShell.path,
-        redirect: (_, state) => state.uri.path == AppRoute.driverShell.path
-            ? AppRoute.driverDashboard.fullPath
-            : null,
-        routes: [
-          GoRoute(
-            path: AppRoute.driverOnboarding.path,
-            name: AppRoute.driverOnboarding.routeName,
-            builder: (_, _) => const DriverOnboardingScreen(),
-          ),
-          GoRoute(
-            path: AppRoute.driverStatus.path,
-            name: AppRoute.driverStatus.routeName,
-            builder: (_, _) => const DriverStatusScreen(),
-          ),
-          GoRoute(
-            path: AppRoute.driverDashboard.path,
-            name: AppRoute.driverDashboard.routeName,
-            builder: (_, _) => const DriverDashboardScreen(),
-          ),
-          GoRoute(
-            path: AppRoute.driverTrip.path,
-            name: AppRoute.driverTrip.routeName,
-            builder: (_, state) =>
-                DriverTripScreen(tripId: state.pathParameters['tripId']!),
-          ),
-          GoRoute(
-            path: AppRoute.driverEarnings.path,
-            name: AppRoute.driverEarnings.routeName,
-            builder: (_, _) => const DriverEarningsScreen(),
-          ),
-        ],
-      ),
-    ],
-  );
+          settings: settings,
+          animation: RouteAnimation.fadeScale,
+        );
+      case RoutesName.registerScreen:
+        return buildRoute(
+          page: const PassengerProfileSetupScreen(),
+          settings: settings,
+        );
+      case RoutesName.passengerHomeScreen:
+        return buildRoute(
+          page: const PassengerHomeScreen(),
+          settings: settings,
+        );
+      case RoutesName.seatBookingScreen:
+        final routeId = _stringArgument(args, 'routeId');
+        if (routeId == null) return _unknownRoute(settings);
+        return buildRoute(
+          page: SeatBookingScreen(routeId: routeId),
+          settings: settings,
+          animation: RouteAnimation.slideRight,
+        );
+      case RoutesName.activeTrackingScreen:
+        final bookingId = _stringArgument(args, 'bookingId');
+        if (bookingId == null) return _unknownRoute(settings);
+        return buildRoute(
+          page: ActiveTrackingScreen(bookingId: bookingId),
+          settings: settings,
+          animation: RouteAnimation.fade,
+        );
+      case RoutesName.passengerProfileScreen:
+        return buildRoute(
+          page: const PassengerProfileScreen(),
+          settings: settings,
+        );
+      case RoutesName.driverDashboardScreen:
+        return buildRoute(
+          page: const DriverDashboardScreen(),
+          settings: settings,
+        );
+      case RoutesName.driverTripScreen:
+        final tripId = _stringArgument(args, 'tripId');
+        if (tripId == null) return _unknownRoute(settings);
+        return buildRoute(
+          page: DriverTripScreen(tripId: tripId),
+          settings: settings,
+          animation: RouteAnimation.slideUp,
+        );
+      case RoutesName.driverEarningsScreen:
+        return buildRoute(
+          page: const DriverEarningsScreen(),
+          settings: settings,
+        );
+      case RoutesName.driverOnboardingScreen:
+        return buildRoute(
+          page: const DriverOnboardingScreen(),
+          settings: settings,
+        );
+      case RoutesName.driverStatusScreen:
+        return buildRoute(
+          page: const DriverStatusScreen(),
+          settings: settings,
+        );
+      default:
+        return _unknownRoute(settings);
+    }
+  }
+
+  static void syncAuthRoute({required String? destination}) {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null || destination == null) return;
+    if (currentRouteName == destination) return;
+    navigator.pushNamedAndRemoveUntil(destination, (_) => false);
+  }
+
+  static String? _stringArgument(Object? args, String key) {
+    if (args is Map) return args[key]?.toString();
+    return null;
+  }
+
+  static Route<dynamic> _unknownRoute(RouteSettings settings) =>
+      buildRoute(
+        page: const Scaffold(
+          body: Center(child: Text('الصفحة غير موجودة')),
+        ),
+        settings: settings,
+      );
+}
+
+class _CurrentRouteObserver extends NavigatorObserver {
+  String? currentRouteName;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    currentRouteName = route.settings.name;
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    currentRouteName = previousRoute?.settings.name;
+    super.didPop(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    currentRouteName = newRoute?.settings.name;
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
 }

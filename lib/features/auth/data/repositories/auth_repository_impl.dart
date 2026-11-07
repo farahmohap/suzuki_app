@@ -1,4 +1,5 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/guard.dart';
@@ -15,9 +16,9 @@ class AuthRepositoryImpl implements AuthRepository {
     required AuthRemoteDataSource remoteDataSource,
     required AuthLocalDataSource localDataSource,
     required NetworkInfo networkInfo,
-  })  : _remote = remoteDataSource,
-        _local = localDataSource,
-        _network = networkInfo;
+  }) : _remote = remoteDataSource,
+       _local = localDataSource,
+       _network = networkInfo;
 
   final AuthRemoteDataSource _remote;
   final AuthLocalDataSource _local;
@@ -27,33 +28,31 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, Unit>> requestOtp({
     required String phone,
     required UserRole role,
-  }) =>
-      guardCall(_network, () async {
-        await _remote.requestOtp(phone: phone, role: role);
-        return unit;
-      });
+  }) => guardCall(_network, () async {
+    await _remote.requestOtp(phone: phone, role: role);
+    return unit;
+  });
 
   @override
   Future<Either<Failure, AuthSession>> verifyOtp({
     required String phone,
     required String code,
-  }) =>
-      guardCall(_network, () async {
-        final deviceId = await _local.getOrCreateDeviceId();
-        final session = await _remote.verifyOtp(
-          phone: phone,
-          code: code,
-          deviceId: deviceId,
-        );
-        await _local.saveSession(session);
-        return session;
-      });
+  }) => guardCall(_network, () async {
+    final deviceId = await _local.getOrCreateDeviceId();
+    final session = await _remote.verifyOtp(
+      phone: phone,
+      code: code,
+      deviceId: deviceId,
+    );
+    await _local.saveSession(session);
+    final user = await _remote.getMe();
+    return session.withUser(user);
+  });
 
   @override
   Future<Either<Failure, AuthModel>> refreshUser() =>
       guardCall(_network, () async {
         final user = await _remote.getMe();
-        await _local.cacheUser(user);
         return user;
       });
 
@@ -71,24 +70,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthModel?> restoreSession() async {
-    if (!await _local.hasTokens()) return null;
-
-    final cachedUser = await _local.getCachedUser();
-    try {
-      // Validate the stored session and get the latest role/status before the
-      // router leaves splash. AuthInterceptor refreshes an expired access token.
-      final user = await _remote.getMe();
-      await _local.cacheUser(user);
-      return user;
-    } catch (_) {
-      // Keep a cached session available during a temporary network outage.
-      // A rejected refresh clears token storage in AuthInterceptor.
-      if (await _local.hasTokens()) return cachedUser;
-      return null;
-    }
+  Future<Either<Failure, AuthModel?>> restoreSession() async {
+    final found = await _local.hasTokens();
+    debugPrint('Auth startup: tokens found=${found ? 'yes' : 'no'}');
+    if (!found) return const Right(null);
+    final result = await guardCall(_network, _remote.getMe);
+    if (!await _local.hasTokens()) return const Right(null);
+    return result.map((user) => user);
   }
-
-  @override
-  Future<void> cacheUser(AuthModel user) => _local.cacheUser(user);
 }

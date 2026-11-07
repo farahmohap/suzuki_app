@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/osm_map_widget.dart';
@@ -130,7 +129,7 @@ class _DriverTripScreenState extends State<DriverTripScreen> {
                             content: Text('تم إنهاء الرحلة بنجاح!'),
                           ),
                         );
-                        context.pop();
+                        Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.error,
