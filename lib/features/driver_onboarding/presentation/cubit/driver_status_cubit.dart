@@ -27,13 +27,12 @@ class DriverStatusState extends Equatable {
     String? error,
     bool clearError = false,
     Set<DocType>? replacing,
-  }) =>
-      DriverStatusState(
-        status: status ?? this.status,
-        info: info ?? this.info,
-        error: clearError ? null : (error ?? this.error),
-        replacing: replacing ?? this.replacing,
-      );
+  }) => DriverStatusState(
+    status: status ?? this.status,
+    info: info ?? this.info,
+    error: clearError ? null : (error ?? this.error),
+    replacing: replacing ?? this.replacing,
+  );
 
   @override
   List<Object?> get props => [status, info, error, replacing];
@@ -58,13 +57,17 @@ class DriverStatusCubit extends Cubit<DriverStatusState> {
 
   /// Re-uploads a rejected document, then reloads the status.
   Future<void> replaceDocument(DocType type, String path) async {
-    emit(state.copyWith(replacing: {...state.replacing, type}, clearError: true));
+    emit(
+      state.copyWith(replacing: {...state.replacing, type}, clearError: true),
+    );
     final result = await _repo.replaceDocument(type, path);
     await result.fold(
-      (f) async => emit(state.copyWith(
-        error: f.message,
-        replacing: {...state.replacing}..remove(type),
-      )),
+      (f) async => emit(
+        state.copyWith(
+          error: f.message,
+          replacing: {...state.replacing}..remove(type),
+        ),
+      ),
       (_) async {
         emit(state.copyWith(replacing: {...state.replacing}..remove(type)));
         await load();

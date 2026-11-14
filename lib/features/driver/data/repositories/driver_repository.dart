@@ -4,7 +4,9 @@ import '../models/driver_models.dart';
 
 abstract class DriverRepository {
   Future<Either<Failure, DriverStatusModel>> getDriverStatus();
-  Future<Either<Failure, DriverStatusModel>> updateDriverStatus(DriverStatus status);
+  Future<Either<Failure, DriverStatusModel>> updateDriverStatus(
+    DriverStatus status,
+  );
   Future<Either<Failure, ActiveRouteModel?>> getActiveRoute();
   Future<Either<Failure, bool>> updateSeatAvailability({
     required String routeId,

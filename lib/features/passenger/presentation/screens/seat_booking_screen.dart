@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/cash_handover_card.dart';
@@ -59,11 +58,15 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
     setState(() {
       if (_seatMap[seatNumber] == SeatStatus.selected) {
         _seatMap[seatNumber] = SeatStatus.available;
-        _selectedSeatCount = _seatMap.values.where((s) => s == SeatStatus.selected).length;
+        _selectedSeatCount = _seatMap.values
+            .where((s) => s == SeatStatus.selected)
+            .length;
         if (_selectedSeatCount == 0) _selectedSeatCount = 1;
       } else if (_seatMap[seatNumber] == SeatStatus.available) {
         _seatMap[seatNumber] = SeatStatus.selected;
-        _selectedSeatCount = _seatMap.values.where((s) => s == SeatStatus.selected).length;
+        _selectedSeatCount = _seatMap.values
+            .where((s) => s == SeatStatus.selected)
+            .length;
       }
     });
   }
@@ -92,9 +95,9 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
       ),
     );
 
-    context.pushNamed(
-      AppRoute.activeTracking.name,
-      pathParameters: {'bookingId': 'booking_october_778'},
+    Navigator.of(context).pushNamed(
+      RoutesName.activeTrackingScreen,
+      arguments: {'bookingId': 'booking_october_778'},
     );
   }
 
@@ -109,7 +112,7 @@ class _SeatBookingScreenState extends State<SeatBookingScreen> {
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(

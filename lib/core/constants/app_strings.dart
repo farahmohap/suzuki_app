@@ -69,7 +69,8 @@ abstract final class AppStrings {
   static const String errorCache = 'تعذّر تحميل البيانات المحلية';
   static const String errorRequired = 'هذا الحقل مطلوب';
   static const String errorPhoneFormat = 'رقم الجوال غير صحيح';
-  static const String errorPasswordLength = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+  static const String errorPasswordLength =
+      'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
   static const String errorPasswordMatch = 'كلمتا المرور غير متطابقتين';
   static const String errorOtpLength = 'رمز التحقق يجب أن يكون 6 أرقام';
 }

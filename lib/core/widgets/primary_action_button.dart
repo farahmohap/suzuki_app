@@ -39,7 +39,9 @@ class PrimaryActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14.r),
         ),
         elevation: 2,
-        shadowColor: (backgroundColor ?? AppColors.stitchCobalt).withOpacity(0.35),
+        shadowColor: (backgroundColor ?? AppColors.stitchCobalt).withOpacity(
+          0.35,
+        ),
       ),
       child: isLoading
           ? SizedBox(

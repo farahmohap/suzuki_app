@@ -36,7 +36,9 @@ class DriverRemoteDataSourceImpl implements DriverRemoteDataSource {
     try {
       final r = await _dio.patch(
         ApiEndpoints.driverStatus,
-        data: {'status': status == DriverStatus.onTrip ? 'on_trip' : status.name},
+        data: {
+          'status': status == DriverStatus.onTrip ? 'on_trip' : status.name,
+        },
       );
       return DriverStatusModel.fromJson(r.data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -63,11 +65,14 @@ class DriverRemoteDataSourceImpl implements DriverRemoteDataSource {
     required bool isOccupied,
   }) async {
     try {
-      await _dio.patch(ApiEndpoints.updateSeats, data: {
-        'route_id': routeId,
-        'seat_number': seatNumber,
-        'is_occupied': isOccupied,
-      });
+      await _dio.patch(
+        ApiEndpoints.updateSeats,
+        data: {
+          'route_id': routeId,
+          'seat_number': seatNumber,
+          'is_occupied': isOccupied,
+        },
+      );
       return true;
     } on DioException catch (e) {
       throw e.toAppException();

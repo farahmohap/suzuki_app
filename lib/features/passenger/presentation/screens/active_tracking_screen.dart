@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/driver_badge_card.dart';
@@ -34,7 +33,7 @@ class ActiveTrackingScreen extends StatelessWidget {
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
@@ -78,7 +77,10 @@ class ActiveTrackingScreen extends StatelessWidget {
                   right: 14.w,
                   left: 14.w,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.stitchCobalt,
                       borderRadius: BorderRadius.circular(12.r),
@@ -95,7 +97,11 @@ class ActiveTrackingScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.timer, color: AppColors.stitchAmberLight, size: 20),
+                            const Icon(
+                              Icons.timer,
+                              color: AppColors.stitchAmberLight,
+                              size: 20,
+                            ),
                             SizedBox(width: 8.w),
                             Text(
                               'الوقت المتبقي للوصول:',
@@ -154,13 +160,21 @@ class ActiveTrackingScreen extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.phone, color: AppColors.stitchCobalt),
+                            icon: const Icon(
+                              Icons.phone,
+                              color: AppColors.stitchCobalt,
+                            ),
                             label: Text(
                               'اتصال بالسائق',
-                              style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp),
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12.sp,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.stitchCobalt),
+                              side: const BorderSide(
+                                color: AppColors.stitchCobalt,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
@@ -171,13 +185,21 @@ class ActiveTrackingScreen extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.chat, color: AppColors.stitchTeal),
+                            icon: const Icon(
+                              Icons.chat,
+                              color: AppColors.stitchTeal,
+                            ),
                             label: Text(
                               'محادثة سريعة',
-                              style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp),
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 12.sp,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.stitchTeal),
+                              side: const BorderSide(
+                                color: AppColors.stitchTeal,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
@@ -219,7 +241,10 @@ class ActiveTrackingScreen extends StatelessWidget {
 
                     // Fare reminder
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 10.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.grey100,
                         borderRadius: BorderRadius.circular(10.r),
@@ -275,7 +300,9 @@ class ActiveTrackingScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCompleted ? AppColors.stitchCobalt : Colors.white,
                   border: Border.all(
-                    color: isCompleted ? AppColors.stitchCobalt : AppColors.grey400,
+                    color: isCompleted
+                        ? AppColors.stitchCobalt
+                        : AppColors.grey400,
                     width: 2,
                   ),
                   shape: BoxShape.circle,
@@ -288,7 +315,9 @@ class ActiveTrackingScreen extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: 2.w,
-                    color: isCompleted ? AppColors.stitchCobalt : AppColors.grey200,
+                    color: isCompleted
+                        ? AppColors.stitchCobalt
+                        : AppColors.grey200,
                   ),
                 ),
             ],
@@ -306,7 +335,9 @@ class ActiveTrackingScreen extends StatelessWidget {
                       fontFamily: 'Cairo',
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
-                      color: isCompleted ? AppColors.onSurface : AppColors.grey600,
+                      color: isCompleted
+                          ? AppColors.onSurface
+                          : AppColors.grey600,
                     ),
                   ),
                   Text(

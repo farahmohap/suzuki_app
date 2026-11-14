@@ -59,10 +59,10 @@ class DriverStatusModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'driver_id': driverId,
-        'status': status.name,
-        'last_updated': lastUpdated.toIso8601String(),
-      };
+    'driver_id': driverId,
+    'status': status.name,
+    'last_updated': lastUpdated.toIso8601String(),
+  };
 
   @override
   List<Object?> get props => [driverId, status, lastUpdated];
@@ -96,11 +96,11 @@ class VehicleSeatModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'seat_number': seatNumber,
-        'is_occupied': isOccupied,
-        'passenger_id': passengerId,
-        'passenger_name': passengerName,
-      };
+    'seat_number': seatNumber,
+    'is_occupied': isOccupied,
+    'passenger_id': passengerId,
+    'passenger_name': passengerName,
+  };
 
   VehicleSeatModel copyWith({
     int? seatNumber,
@@ -117,7 +117,12 @@ class VehicleSeatModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [seatNumber, isOccupied, passengerId, passengerName];
+  List<Object?> get props => [
+    seatNumber,
+    isOccupied,
+    passengerId,
+    passengerName,
+  ];
 }
 
 // ── ActiveRouteModel ──────────────────────────────────────────────────────
@@ -141,7 +146,8 @@ class ActiveRouteModel extends Equatable {
   final DateTime? estimatedArrival;
   final double? fare;
 
-  int get occupiedCount => seats.where((s) => s.isOccupied && !s.isDriver).length;
+  int get occupiedCount =>
+      seats.where((s) => s.isOccupied && !s.isDriver).length;
   int get totalPassengerSeats => seats.where((s) => !s.isDriver).length;
   int get availableCount => totalPassengerSeats - occupiedCount;
 
@@ -165,23 +171,23 @@ class ActiveRouteModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'route_id': routeId,
-        'origin_name': originName,
-        'destination_name': destinationName,
-        'seats': seats.map((s) => s.toJson()).toList(),
-        'departure_time': departureTime.toIso8601String(),
-        'estimated_arrival': estimatedArrival?.toIso8601String(),
-        'fare': fare,
-      };
+    'route_id': routeId,
+    'origin_name': originName,
+    'destination_name': destinationName,
+    'seats': seats.map((s) => s.toJson()).toList(),
+    'departure_time': departureTime.toIso8601String(),
+    'estimated_arrival': estimatedArrival?.toIso8601String(),
+    'fare': fare,
+  };
 
   @override
   List<Object?> get props => [
-        routeId,
-        originName,
-        destinationName,
-        seats,
-        departureTime,
-      ];
+    routeId,
+    originName,
+    destinationName,
+    seats,
+    departureTime,
+  ];
 }
 
 // ── EarningsModel ─────────────────────────────────────────────────────────
@@ -206,10 +212,10 @@ class DailyEarning extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'date': date.toIso8601String(),
-        'amount': amount,
-        'trips': trips,
-      };
+    'date': date.toIso8601String(),
+    'amount': amount,
+    'trips': trips,
+  };
 
   @override
   List<Object?> get props => [date, amount, trips];
@@ -250,22 +256,22 @@ class EarningsModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'driver_id': driverId,
-        'total_earnings': totalEarnings,
-        'today_earnings': todayEarnings,
-        'weekly_earnings': weeklyEarnings,
-        'total_trips': totalTrips,
-        'today_trips': todayTrips,
-        'daily_breakdown': dailyBreakdown.map((d) => d.toJson()).toList(),
-      };
+    'driver_id': driverId,
+    'total_earnings': totalEarnings,
+    'today_earnings': todayEarnings,
+    'weekly_earnings': weeklyEarnings,
+    'total_trips': totalTrips,
+    'today_trips': todayTrips,
+    'daily_breakdown': dailyBreakdown.map((d) => d.toJson()).toList(),
+  };
 
   @override
   List<Object?> get props => [
-        driverId,
-        totalEarnings,
-        todayEarnings,
-        weeklyEarnings,
-        totalTrips,
-        todayTrips,
-      ];
+    driverId,
+    totalEarnings,
+    todayEarnings,
+    weeklyEarnings,
+    totalTrips,
+    todayTrips,
+  ];
 }

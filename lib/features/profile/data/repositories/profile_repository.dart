@@ -32,6 +32,5 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Either<Failure, AuthModel>> savePassengerProfile(
     PassengerProfileInput input,
-  ) =>
-      guardCall(_network, () => _remote.savePassengerProfile(input));
+  ) => guardCall(_network, () => _remote.savePassengerProfile(input));
 }

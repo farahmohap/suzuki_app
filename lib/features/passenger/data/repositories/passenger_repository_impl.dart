@@ -14,9 +14,9 @@ class PassengerRepositoryImpl implements PassengerRepository {
     required PassengerRemoteDataSource remoteDataSource,
     required PassengerLocalDataSource localDataSource,
     required NetworkInfo networkInfo,
-  })  : _remote = remoteDataSource,
-        _local = localDataSource,
-        _network = networkInfo;
+  }) : _remote = remoteDataSource,
+       _local = localDataSource,
+       _network = networkInfo;
 
   final PassengerRemoteDataSource _remote;
   final PassengerLocalDataSource _local;

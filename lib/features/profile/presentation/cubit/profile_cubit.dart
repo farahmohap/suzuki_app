@@ -37,25 +37,24 @@ class ProfileState extends Equatable {
     AuthModel? savedUser,
     String? error,
     Map<String, String>? fieldErrors,
-  }) =>
-      ProfileState(
-        districtsStatus: districtsStatus ?? this.districtsStatus,
-        districts: districts ?? this.districts,
-        saveStatus: saveStatus ?? this.saveStatus,
-        savedUser: savedUser ?? this.savedUser,
-        error: error,
-        fieldErrors: fieldErrors ?? this.fieldErrors,
-      );
+  }) => ProfileState(
+    districtsStatus: districtsStatus ?? this.districtsStatus,
+    districts: districts ?? this.districts,
+    saveStatus: saveStatus ?? this.saveStatus,
+    savedUser: savedUser ?? this.savedUser,
+    error: error,
+    fieldErrors: fieldErrors ?? this.fieldErrors,
+  );
 
   @override
   List<Object?> get props => [
-        districtsStatus,
-        districts,
-        saveStatus,
-        savedUser,
-        error,
-        fieldErrors,
-      ];
+    districtsStatus,
+    districts,
+    saveStatus,
+    savedUser,
+    error,
+    fieldErrors,
+  ];
 }
 
 @injectable
@@ -68,14 +67,12 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(state.copyWith(districtsStatus: LoadStatus.loading));
     final r = await _repo.getDistricts();
     r.fold(
-      (f) => emit(state.copyWith(
-        districtsStatus: LoadStatus.failure,
-        error: f.message,
-      )),
-      (list) => emit(state.copyWith(
-        districtsStatus: LoadStatus.success,
-        districts: list,
-      )),
+      (f) => emit(
+        state.copyWith(districtsStatus: LoadStatus.failure, error: f.message),
+      ),
+      (list) => emit(
+        state.copyWith(districtsStatus: LoadStatus.success, districts: list),
+      ),
     );
   }
 
@@ -83,15 +80,15 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(state.copyWith(saveStatus: LoadStatus.loading, fieldErrors: const {}));
     final r = await _repo.savePassengerProfile(input);
     r.fold(
-      (f) => emit(state.copyWith(
-        saveStatus: LoadStatus.failure,
-        error: f.message,
-        fieldErrors: f is ServerFailure ? (f.fields ?? const {}) : const {},
-      )),
-      (user) => emit(state.copyWith(
-        saveStatus: LoadStatus.success,
-        savedUser: user,
-      )),
+      (f) => emit(
+        state.copyWith(
+          saveStatus: LoadStatus.failure,
+          error: f.message,
+          fieldErrors: f is ServerFailure ? (f.fields ?? const {}) : const {},
+        ),
+      ),
+      (user) =>
+          emit(state.copyWith(saveStatus: LoadStatus.success, savedUser: user)),
     );
   }
 }

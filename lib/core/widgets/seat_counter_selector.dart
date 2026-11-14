@@ -26,7 +26,9 @@ class SeatCounterSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalPrice = selectedMode == RideMode.charter ? charterPrice : (seatCount * pricePerSeat);
+    final totalPrice = selectedMode == RideMode.charter
+        ? charterPrice
+        : (seatCount * pricePerSeat);
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -103,7 +105,9 @@ class SeatCounterSelector extends StatelessWidget {
                 children: [
                   // Decrement Button
                   IconButton(
-                    onPressed: seatCount > 1 ? () => onCountChanged(seatCount - 1) : null,
+                    onPressed: seatCount > 1
+                        ? () => onCountChanged(seatCount - 1)
+                        : null,
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppColors.onSurface,
@@ -154,7 +158,9 @@ class SeatCounterSelector extends StatelessWidget {
 
                   // Increment Button
                   IconButton(
-                    onPressed: seatCount < maxSeats ? () => onCountChanged(seatCount + 1) : null,
+                    onPressed: seatCount < maxSeats
+                        ? () => onCountChanged(seatCount + 1)
+                        : null,
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.stitchCobalt,
                       foregroundColor: Colors.white,
@@ -215,7 +221,9 @@ class SeatCounterSelector extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: (7 - maxSeats) / 7.0,
                 backgroundColor: AppColors.grey200,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.stitchAmber),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.stitchAmber,
+                ),
                 minHeight: 6.h,
               ),
             ),
@@ -332,7 +340,9 @@ class SeatCounterSelector extends StatelessWidget {
                 fontFamily: 'Cairo',
                 fontSize: 13.sp,
                 fontWeight: FontWeight.w900,
-                color: isSelected ? AppColors.stitchAmberLight : AppColors.stitchCobalt,
+                color: isSelected
+                    ? AppColors.stitchAmberLight
+                    : AppColors.stitchCobalt,
               ),
             ),
           ],

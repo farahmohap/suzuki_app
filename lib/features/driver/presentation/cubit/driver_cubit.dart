@@ -7,10 +7,9 @@ import 'driver_state.dart';
 /// Orchestrates all driver-side state directly with [DriverRepository].
 @injectable
 class DriverCubit extends Cubit<DriverState> {
-  DriverCubit({
-    required DriverRepository driverRepository,
-  })  : _repo = driverRepository,
-        super(const DriverInitial());
+  DriverCubit({required DriverRepository driverRepository})
+    : _repo = driverRepository,
+      super(const DriverInitial());
 
   final DriverRepository _repo;
 

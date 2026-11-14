@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
@@ -80,9 +79,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       _error = null;
     });
     final message = await context.read<AuthCubit>().verifyOtp(
-          phone: widget.phoneNumber,
-          code: code,
-        );
+      phone: widget.phoneNumber,
+      code: code,
+    );
     if (!mounted) return;
     // On success the router redirects away from this screen.
     setState(() {
@@ -101,9 +100,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (!mounted) return;
     if (message == null) {
       _startTimer();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إرسال رمز جديد')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم إرسال رمز جديد')));
     } else {
       setState(() => _error = message);
     }
@@ -119,7 +118,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
@@ -178,8 +177,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               color: _error != null
                                   ? AppColors.error
                                   : (active
-                                      ? AppColors.primary
-                                      : AppColors.grey600.withOpacity(0.3)),
+                                        ? AppColors.primary
+                                        : AppColors.grey600.withOpacity(0.3)),
                               width: active ? 2 : 1,
                             ),
                           ),
@@ -206,7 +205,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         autofillHints: const [AutofillHints.oneTimeCode],
                         maxLength: _length,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9٠-٩]')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9٠-٩]'),
+                          ),
                         ],
                         onChanged: (v) {
                           setState(() => _error = null);

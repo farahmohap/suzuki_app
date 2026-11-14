@@ -26,11 +26,11 @@ final class ServerFailure extends Failure {
   final Map<String, String>? fields;
 
   factory ServerFailure.fromException(ServerException e) => ServerFailure(
-        message: e.message,
-        code: e.code,
-        statusCode: e.statusCode,
-        fields: e.fields,
-      );
+    message: e.message,
+    code: e.code,
+    statusCode: e.statusCode,
+    fields: e.fields,
+  );
 }
 
 /// Device has no internet connection or request timed out.

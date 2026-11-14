@@ -17,45 +17,41 @@ class DistrictModel extends Equatable {
   final String? code;
 
   factory DistrictModel.fromJson(Map<dynamic, dynamic> json) => DistrictModel(
-        id: json['id'].toString(),
-        nameAr: (json['name_ar'] ?? json['name'] ?? '').toString(),
-        code: json['code']?.toString(),
-      );
+    id: json['id'].toString(),
+    nameAr: (json['name_ar'] ?? json['name'] ?? '').toString(),
+    code: json['code']?.toString(),
+  );
 
   @override
   List<Object?> get props => [id, nameAr, code];
 }
 
-/// Body of `PUT /users/me` for a passenger.
+/// Body of `POST /passengers/register` for a passenger.
 class PassengerProfileInput extends Equatable {
   const PassengerProfileInput({
     required this.fullName,
+    required this.birthDate,
     required this.gender,
-    required this.age,
-    required this.districtId,
-    required this.addressText,
-    required this.latitude,
-    required this.longitude,
+    this.districtId,
+    this.address,
   });
 
   final String fullName;
+  final DateTime birthDate;
   final Gender gender;
-  final int age;
-  final String districtId;
-  final String addressText;
-  final double latitude;
-  final double longitude;
+  final String? districtId;
+  final String? address;
 
   Map<String, dynamic> toJson() => {
-        'full_name': fullName,
-        'gender': gender.apiValue,
-        'birth_year': DateTime.now().year - age,
-        'district_id': districtId,
-        'address_text': addressText,
-        'location': {'lat': latitude, 'lng': longitude},
-      };
+    'full_name': fullName,
+    'birth_date':
+        '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
+    'gender': gender.apiValue,
+    if (address != null && address!.trim().isNotEmpty)
+      'address': address!.trim(),
+    if (districtId != null) 'district_id': int.tryParse(districtId!),
+  };
 
   @override
-  List<Object?> get props =>
-      [fullName, gender, age, districtId, addressText, latitude, longitude];
+  List<Object?> get props => [fullName, birthDate, gender, districtId, address];
 }

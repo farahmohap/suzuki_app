@@ -52,9 +52,15 @@ class DriverBadgeCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 28.r,
                     backgroundColor: AppColors.stitchCobaltLight,
-                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                    backgroundImage: avatarUrl != null
+                        ? NetworkImage(avatarUrl!)
+                        : null,
                     child: avatarUrl == null
-                        ? Icon(Icons.person, size: 32.sp, color: AppColors.stitchCobalt)
+                        ? Icon(
+                            Icons.person,
+                            size: 32.sp,
+                            color: AppColors.stitchCobalt,
+                          )
                         : null,
                   ),
                   Positioned(
@@ -95,7 +101,10 @@ class DriverBadgeCard extends StatelessWidget {
                         ),
                         // Rating Pill
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.grey100,
                             borderRadius: BorderRadius.circular(12.r),
@@ -103,7 +112,11 @@ class DriverBadgeCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: AppColors.stitchAmber, size: 14),
+                              const Icon(
+                                Icons.star,
+                                color: AppColors.stitchAmber,
+                                size: 14,
+                              ),
                               SizedBox(width: 3.w),
                               Text(
                                 '$rating',
@@ -141,7 +154,11 @@ class DriverBadgeCard extends StatelessWidget {
                     SizedBox(height: 2.h),
                     Row(
                       children: [
-                        Icon(Icons.directions_car, size: 13.sp, color: AppColors.stitchCobalt),
+                        Icon(
+                          Icons.directions_car,
+                          size: 13.sp,
+                          color: AppColors.stitchCobalt,
+                        ),
                         SizedBox(width: 4.w),
                         Text(
                           vanInfo,
@@ -177,7 +194,11 @@ class DriverBadgeCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.verified_user, color: AppColors.stitchTeal, size: 14.sp),
+                    Icon(
+                      Icons.verified_user,
+                      color: AppColors.stitchTeal,
+                      size: 14.sp,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       hubCertification,

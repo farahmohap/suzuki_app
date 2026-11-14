@@ -36,7 +36,9 @@ class StationChipsBar extends StatelessWidget {
                 color: isSelected ? AppColors.stitchCobalt : AppColors.surface,
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: isSelected ? AppColors.stitchCobalt : AppColors.grey200,
+                  color: isSelected
+                      ? AppColors.stitchCobalt
+                      : AppColors.grey200,
                   width: 1.2,
                 ),
                 boxShadow: isSelected
@@ -63,7 +65,9 @@ class StationChipsBar extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 12.sp,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
                       color: isSelected ? Colors.white : AppColors.onSurface,
                     ),
                   ),

@@ -29,7 +29,8 @@ abstract class RegisterModule {
       SharedPreferences.getInstance();
 
   @lazySingleton
-FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
+  FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
+
   /// The ONE configured Dio (with auth + refresh interceptors).
   @lazySingleton
   Dio dio(TokenStorage tokens, SessionEvents session) =>

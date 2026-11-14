@@ -4,7 +4,6 @@ import '../../../../core/utils/validators.dart';
 import '../../data/models/auth_model.dart';
 import '../cubit/auth_cubit.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
 
@@ -53,9 +52,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    context.pushNamed(
-      AppRoute.otp.routeName,
-      extra: {'phone': phone, 'isDriver': _isDriver},
+    Navigator.of(context).pushNamed(
+      RoutesName.otpScreen,
+      arguments: {'phone': phone, 'isDriver': _isDriver},
     );
   }
 
@@ -564,8 +563,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () =>
-                          context.pushNamed(AppRoute.register.routeName),
+                      onTap: () => Navigator.of(
+                        context,
+                      ).pushNamed(RoutesName.registerScreen),
                       child: Text(
                         'إنشاء حساب جديد',
                         style: TextStyle(

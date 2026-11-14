@@ -30,8 +30,11 @@ class PassengerLocalDataSourceImpl implements PassengerLocalDataSource {
   Future<List<LandmarkModel>> getCachedLandmarks() async {
     try {
       return _box.values
-          .map((json) =>
-              LandmarkModel.fromJson(jsonDecode(json) as Map<String, dynamic>))
+          .map(
+            (json) => LandmarkModel.fromJson(
+              jsonDecode(json) as Map<String, dynamic>,
+            ),
+          )
           .toList();
     } catch (_) {
       throw const CacheException(message: 'تعذّر تحميل المعالم المحفوظة');
@@ -42,9 +45,7 @@ class PassengerLocalDataSourceImpl implements PassengerLocalDataSource {
   Future<void> cacheLandmarks(List<LandmarkModel> landmarks) async {
     try {
       await _box.clear();
-      final entries = {
-        for (final l in landmarks) l.id: jsonEncode(l.toJson()),
-      };
+      final entries = {for (final l in landmarks) l.id: jsonEncode(l.toJson())};
       await _box.putAll(entries);
     } catch (_) {
       throw const CacheException(message: 'تعذّر حفظ المعالم');

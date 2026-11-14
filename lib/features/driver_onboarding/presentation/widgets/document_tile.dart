@@ -70,8 +70,8 @@ class DocumentTile extends StatelessWidget {
     final color = done
         ? Colors.green.shade700
         : (failed || rejectReason != null)
-            ? AppColors.error
-            : AppColors.primary;
+        ? AppColors.error
+        : AppColors.primary;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -146,7 +146,10 @@ class DocumentTile extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     'سبب الرفض: $rejectReason',
-                    style: const TextStyle(color: AppColors.error, fontSize: 12),
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
             ],

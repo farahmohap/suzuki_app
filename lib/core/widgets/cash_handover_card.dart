@@ -12,7 +12,10 @@ class CashHandoverCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.stitchAmberLight.withOpacity(0.6),
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: AppColors.stitchAmber.withOpacity(0.4), width: 1.2),
+        border: Border.all(
+          color: AppColors.stitchAmber.withOpacity(0.4),
+          width: 1.2,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +58,10 @@ class CashHandoverCard extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(6.r),

@@ -5,10 +5,12 @@ import '../../features/auth/data/models/auth_model.dart';
 /// [resolved]: the stored session has been checked at least once.
 /// [user]: signed-in user, or null.
 /// [location]: the location being navigated to.
+/// [isNewUser]: the transient OTP result; passenger onboarding signal only.
 String? resolveRedirect({
   required bool resolved,
   required AuthModel? user,
   required String location,
+  bool? isNewUser,
 }) {
   const splash = '/';
   const login = '/login';
@@ -18,18 +20,20 @@ String? resolveRedirect({
   if (!resolved) return location == splash ? null : splash;
 
   if (user == null) {
-    return (location == login || location == otp)
-        ? null
-        : login;
+    return (location == login || location == otp) ? null : login;
   }
 
   final home = homeFor(user);
-  if (location == splash || location == login || location == otp) return home;
+  if (location == splash || location == login || location == otp) {
+    if (user.isPassenger && isNewUser == true) return register;
+    return home;
+  }
 
   if (user.isDriver) {
     if (!location.startsWith('/driver')) return home;
     final approved = user.driverStatus == VerificationStatus.approved;
-    final inVerification = location.startsWith('/driver/onboarding') ||
+    final inVerification =
+        location.startsWith('/driver/onboarding') ||
         location.startsWith('/driver/status');
     if (!approved && !inVerification) return home;
     if (approved && inVerification) return home;
@@ -45,8 +49,8 @@ String? resolveRedirect({
 
   // Passenger
   if (location.startsWith('/driver')) return home;
-  if (!user.profileComplete && location != register) return register;
-  if (user.profileComplete && location == register) return home;
+  if (isNewUser == true) return location == register ? null : register;
+  if (location == register) return home;
   return null;
 }
 
@@ -66,5 +70,5 @@ String homeFor(AuthModel user) {
         return '/driver/status';
     }
   }
-  return user.profileComplete ? '/passenger/home' : '/register';
+  return '/passenger/home';
 }
